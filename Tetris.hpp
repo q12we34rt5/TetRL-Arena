@@ -24,15 +24,17 @@ struct Block {
     uint32_t data[4];
 };
 
-enum class ClearType {
+enum class ClearType : uint8_t {
     NONE,
     SINGLE,
     DOUBLE,
     TRIPLE,
     QUAD,
+    TSPIN, // without line clear
     TSPIN_SINGLE,
     TSPIN_DOUBLE,
     TSPIN_TRIPLE,
+    MINI_TSPIN, // without line clear
     MINI_TSPIN_SINGLE,
     MINI_TSPIN_DOUBLE,
 };
@@ -49,6 +51,11 @@ struct State {
     int lines_cleared;
     uint32_t seed;
     int srs_index;
+    uint32_t piece_count;
+    bool was_last_rotation; // Indicates if the last successful action was a rotation
+    ClearType last_clear_type;
+    int32_t back_to_back_count;
+    int32_t combo_count;
 };
 
 // Super Rotation System (https://harddrop.com/wiki/SRS)
@@ -71,7 +78,7 @@ extern const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirecti
 void setSeed(State* state, uint32_t seed);
 
 void reset(State* state);
-bool generateBlock(State* state);
+bool generateBlock(State* state, bool called_by_hold = false);
 
 bool moveLeft(State* state);
 bool moveRight(State* state);
