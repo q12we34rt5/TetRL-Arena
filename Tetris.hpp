@@ -52,7 +52,22 @@ struct State {
     int srs_index;
 };
 
+// Super Rotation System (https://harddrop.com/wiki/SRS)
+struct SRSKickData {
+    struct Kick { int x, y; };
+    const Kick* kicks;
+    const int length;
+};
+
+enum class RotationDirection : uint8_t { // TODO: rename RotationDirection -> Rotation?
+    CLOCKWISE,
+    COUNTERCLOCKWISE,
+    HALFTURN, // 180
+    SIZE
+};
+
 extern const Block blocks[Block::Type::SIZE][4];
+extern const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZE)];
 
 void setSeed(State* state, uint32_t seed);
 
@@ -61,7 +76,10 @@ bool generateBlock(State* state);
 
 bool moveLeft(State* state);
 bool moveRight(State* state);
+bool moveLeftToWall(State* state);
+bool moveRightToWall(State* state);
 bool softDrop(State* state);
+bool softDropToFloor(State* state);
 bool hardDrop(State* state);
 bool rotateCounterclockwise(State* state);
 bool rotateClockwise(State* state);
@@ -71,4 +89,4 @@ bool hold(State* state);
 void toString(State* state, char* buf, size_t size);
 
 void eraseCurrent(State* state);
-void pasteCurrent(State* state);
+bool pasteCurrent(State* state);

@@ -7,6 +7,27 @@
 
 #include <cassert>
 
+template<template<int...> class Container, int n, int ...args>
+struct IndexGenerator : IndexGenerator<Container, n - 1, n - 1, args...> {};
+template<template<int...> class Container, int ...args>
+struct IndexGenerator<Container, 0, args...> { using result = Container<args...>; };
+template<int ...args>
+struct Wrapper {
+    template<int height, int padding, uint32_t row, uint32_t wall>
+    struct BoardInitializer {
+        template<bool condition, typename x> struct If {};
+        template<typename x> struct If<true, x> { static constexpr uint32_t value = wall; };
+        template<typename x> struct If<false, x> { static constexpr uint32_t value = row; };
+
+        static const uint32_t board[height];
+    };
+};
+template<int ...args>
+template<int height, int padding, uint32_t row, uint32_t wall>
+const uint32_t Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::board[height] = {
+    Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
+};
+
 const Block blocks[Block::Type::SIZE][4] = {{
     {0b11110000000000000000000000000000u,
      0b00111100000000000000000000000000u,
@@ -120,41 +141,6 @@ const Block blocks[Block::Type::SIZE][4] = {{
      0b11110000000000000000000000000000u,
      0b00110000000000000000000000000000u,
      0b00000000000000000000000000000000u}}
-};
-
-template<template<int...> class Container, int n, int ...args>
-struct IndexGenerator : IndexGenerator<Container, n - 1, n - 1, args...> {};
-template<template<int...> class Container, int ...args>
-struct IndexGenerator<Container, 0, args...> { using result = Container<args...>; };
-template<int ...args>
-struct Wrapper {
-    template<int height, int padding, uint32_t row, uint32_t wall>
-    struct BoardInitializer {
-        template<bool condition, typename x> struct If {};
-        template<typename x> struct If<true, x> { static constexpr uint32_t value = wall; };
-        template<typename x> struct If<false, x> { static constexpr uint32_t value = row; };
-
-        static const uint32_t board[height];
-    };
-};
-template<int ...args>
-template<int height, int padding, uint32_t row, uint32_t wall>
-const uint32_t Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::board[height] = {
-    Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
-};
-
-// Super Rotation System (https://harddrop.com/wiki/SRS)
-struct SRSKickData {
-    struct Kick { int x, y; };
-    const Kick* kicks;
-    const int length;
-};
-
-enum class RotationDirection : uint8_t { // TODO: rename RotationDirection -> Rotation?
-    CLOCKWISE,
-    COUNTERCLOCKWISE,
-    HALFTURN, // 180
-    SIZE
 };
 
 static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, RotationDirection direction) {
@@ -275,7 +261,7 @@ static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, RotationDir
 }
 
 // srs_table[<block-type>][<block-rotation>][<direction>].kicks[<srs-index>]
-static const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZE)] = {
+const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZE)] = {
     {
         {getSRSKickData(Block::Type::Z, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 0, RotationDirection::HALFTURN)},
         {getSRSKickData(Block::Type::Z, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 1, RotationDirection::HALFTURN)},
@@ -431,7 +417,7 @@ inline bool rotateBlock(State* state, RotationDirection dir) {
     // current orientation bitmasks at current (x,y)
     const auto& cur_data = blocks[state->current][state->orientation].data;
     const int x_offset = state->x << 1;
-    const int y_offset = BOARD_TOP + state->y;
+    const int y_offset = state->y + BOARD_TOP;
     uint32_t* rows = &state->board[y_offset];
 
     // compute old block positions
@@ -506,7 +492,7 @@ bool generateBlock(State* state) {
 
     auto& block_data = blocks[cur][0].data;
     const int x_offset = state->x << 1;
-    const int y_offset = BOARD_TOP + state->y;
+    const int y_offset = state->y + BOARD_TOP;
     uint32_t* rows = &state->board[y_offset];
 
     // compute new block positions
@@ -540,7 +526,22 @@ bool generateBlock(State* state) {
 
 bool moveLeft (State* state) { return moveBlock(state, state->x - 1, state->y    ); }
 bool moveRight(State* state) { return moveBlock(state, state->x + 1, state->y    ); }
+bool moveLeftToWall(State* state) {
+    bool moved = false;
+    while (moveLeft(state)) { moved = true; }
+    return moved;
+}
+bool moveRightToWall(State* state) {
+    bool moved = false;
+    while (moveRight(state)) { moved = true; }
+    return moved;
+}
 bool softDrop(State* state)  { return moveBlock(state, state->x    , state->y + 1); }
+bool softDropToFloor(State* state) {
+    bool moved = false;
+    while (softDrop(state)) { moved = true; }
+    return moved;
+}
 bool hardDrop(State* state) {
     while (softDrop(state));
     return generateBlock(state);
@@ -560,7 +561,7 @@ bool hold(State* state) {
 
     auto& block_data = blocks[state->current][state->orientation].data;
     const int x_offset = state->x << 1;
-    const int y_offset = BOARD_TOP + state->y;
+    const int y_offset = state->y + BOARD_TOP;
     uint32_t* rows = &state->board[y_offset];
 
     // compute block positions
@@ -662,28 +663,35 @@ void toString(State* state, char* buf, size_t size) {
 void eraseCurrent(State* state) {
     auto& block_data = blocks[state->current][state->orientation].data;
     const int x_offset = state->x << 1;
-    const int y_offset = BOARD_TOP + state->y;
-    uint32_t& board_r1 = state->board[y_offset + 0];
-    uint32_t& board_r2 = state->board[y_offset + 1];
-    uint32_t& board_r3 = state->board[y_offset + 2];
-    uint32_t& board_r4 = state->board[y_offset + 3];
-    board_r1 ^= board_r1 & (block_data[0] >> x_offset);
-    board_r2 ^= board_r2 & (block_data[1] >> x_offset);
-    board_r3 ^= board_r3 & (block_data[2] >> x_offset);
-    board_r4 ^= board_r4 & (block_data[3] >> x_offset);
+    const int y_offset = state->y + BOARD_TOP;
+    uint32_t* rows = &state->board[y_offset];
+
+    // compute block positions
+    uint32_t block_mask[4];
+    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
+
+    // remove block from board
+    for (int i = 0; i < 4; ++i) { rows[i] &= ~block_mask[i]; }
 }
-void pasteCurrent(State* state) {
+bool pasteCurrent(State* state) {
     auto& block_data = blocks[state->current][state->orientation].data;
     const int x_offset = state->x << 1;
-    const int y_offset = BOARD_TOP + state->y;
-    uint32_t& board_r1 = state->board[y_offset + 0];
-    uint32_t& board_r2 = state->board[y_offset + 1];
-    uint32_t& board_r3 = state->board[y_offset + 2];
-    uint32_t& board_r4 = state->board[y_offset + 3];
-    board_r1 |= block_data[0] >> x_offset;
-    board_r2 |= block_data[1] >> x_offset;
-    board_r3 |= block_data[2] >> x_offset;
-    board_r4 |= block_data[3] >> x_offset;
+    const int y_offset = state->y + BOARD_TOP;
+    uint32_t* rows = &state->board[y_offset];
+
+    // compute block positions
+    uint32_t block_mask[4];
+    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
+
+    // test collision
+    for (int i = 0; i < 4; ++i) {
+        if (block_mask[i] & rows[i]) { return false; }
+    }
+
+    // place block on board
+    for (int i = 0; i < 4; ++i) { rows[i] |= block_mask[i]; }
+
+    return true;
 }
 
 static int initialize() {
