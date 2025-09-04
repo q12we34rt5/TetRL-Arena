@@ -143,7 +143,7 @@ const Block blocks[Block::Type::SIZE][4] = {{
      0b00000000000000000000000000000000u}}
 };
 
-static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, RotationDirection direction) {
+inline static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, RotationDirection direction) {
     // [<block-rotation>][<direction>][<srs-index>]
     static const SRSKickData::Kick JLSTZ[4][2][5] = {{
             {{ 0,  0}, {-1,  0}, {-1,  1}, { 0, -2}, {-1, -2}},          // 0 -> 1
@@ -300,7 +300,7 @@ const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZ
     },
 };
 
-static uint32_t xorshf32(uint32_t& seed) {
+inline static uint32_t xorshf32(uint32_t& seed) {
     seed ^= seed << 13;
     seed ^= seed >> 17;
     seed ^= seed << 5;
@@ -319,7 +319,7 @@ struct PackedSevenBag {
 
 // 7! = 5040
 static PackedSevenBag seven_bag_permutations[5040];
-static void initializeSevenBagPermutations() {
+inline static void initializeSevenBagPermutations() {
     Block::Type next[] = { Block::Z, Block::L, Block::O, Block::S, Block::I, Block::J, Block::T };
     int index = 0;
     do {
@@ -334,7 +334,7 @@ static void initializeSevenBagPermutations() {
     } while (std::next_permutation(next, next + 7));
 }
 
-static inline void randomBlocks(Block::Type dest[], uint32_t& seed) {
+inline static void randomBlocks(Block::Type dest[], uint32_t& seed) {
     PackedSevenBag& ref = seven_bag_permutations[xorshf32(seed) % 5040];
     dest[0] = Block::Type(ref.b0);
     dest[1] = Block::Type(ref.b1);
@@ -352,7 +352,7 @@ inline static void clean(State* state) {
     memcpy(state->board, Initializer::board, sizeof(state->board));
 }
 
-inline int cleanLines(State* state) {
+inline static int clearLines(State* state) {
     static constexpr uint32_t fullfilled = 0b00000001010101010101010101000000u;
     int count = 0;
     for (int i = BOARD_BOTTOM; i >= BOARD_TOP - 3 /* TODO: Fix this */; i--) {
@@ -365,7 +365,7 @@ inline int cleanLines(State* state) {
     return count;
 }
 
-inline bool moveBlock(State* state, int new_x, int new_y) {
+inline static bool moveBlock(State* state, int new_x, int new_y) {
     const auto& block_data = blocks[state->current][state->orientation].data;
     const int old_x_offset = state->x << 1;
     const int old_y_offset = state->y + BOARD_TOP;
@@ -401,7 +401,7 @@ inline bool moveBlock(State* state, int new_x, int new_y) {
 
     return !collision;
 }
-inline bool rotateBlock(State* state, RotationDirection dir) {
+inline static bool rotateBlock(State* state, RotationDirection dir) {
     constexpr int8_t orientation_delta_table[uint8_t(RotationDirection::SIZE)] = {
         1, // CW
         3, // CCW
@@ -478,7 +478,7 @@ void reset(State* state) {
     state->srs_index = -1;
 }
 bool generateBlock(State* state) {
-    int line_count = cleanLines(state);
+    int line_count = clearLines(state);
     state->lines_cleared += line_count;
 
     state->has_held = false;
