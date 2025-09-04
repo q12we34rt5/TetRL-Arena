@@ -47,7 +47,6 @@ struct State {
     int8_t orientation;
     int x, y;
     int lines_cleared;
-    int lifetime;
     uint32_t seed;
     int srs_index;
 };

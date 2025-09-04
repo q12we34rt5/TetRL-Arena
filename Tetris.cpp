@@ -475,7 +475,6 @@ void reset(State* state) {
     state->x = -1;
     state->y = -1;
     state->lines_cleared = 0;
-    state->lifetime = 0;
     state->srs_index = -1;
 }
 bool generateBlock(State* state) {
