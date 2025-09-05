@@ -379,8 +379,9 @@ inline static std::pair<bool, bool> isTspin(State* state) {
         {0, 2},
     };
     bool is_mini
-        = corners[mini_check_corner_table[state->orientation].first] == 0
-        || corners[mini_check_corner_table[state->orientation].second] == 0;
+        = state->srs_index < 4 // not mini if used 5th kick
+        && (corners[mini_check_corner_table[state->orientation].first] == 0
+        || corners[mini_check_corner_table[state->orientation].second] == 0);
     return {true, is_mini};
 }
 inline static ClearType getClearType(int lines_cleared, bool tspin, bool tspin_mini) {
