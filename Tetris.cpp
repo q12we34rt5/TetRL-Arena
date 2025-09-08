@@ -572,7 +572,7 @@ bool generateBlock(State* state, bool called_by_hold) {
         }
     }
 
-    state->srs_index = 0;
+    state->srs_index = -1;
     state->was_last_rotation = false;
 
     Block::Type cur = state->next[0];
