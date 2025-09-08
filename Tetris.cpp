@@ -614,7 +614,7 @@ bool generateBlock(State* state, bool called_by_hold) {
     return true;
 }
 
-bool moveLeft (State* state) {
+bool moveLeft(State* state) {
     bool moved = moveBlock(state, state->x - 1, state->y);
     if (moved) { state->was_last_rotation = false; }
     return moved;
@@ -636,7 +636,7 @@ bool moveRightToWall(State* state) {
     if (moved) { state->was_last_rotation = false; }
     return moved;
 }
-bool softDrop(State* state)  {
+bool softDrop(State* state) {
     bool moved = moveBlock(state, state->x, state->y + 1);
     if (moved) { state->was_last_rotation = false; }
     return moved;
@@ -658,12 +658,12 @@ bool rotateCounterclockwise(State* state) {
     if (moved) { state->was_last_rotation = true; }
     return moved;
 }
-bool rotateClockwise(State* state)        {
+bool rotateClockwise(State* state) {
     bool moved = rotateBlock(state, RotationDirection::CLOCKWISE);
     if (moved) { state->was_last_rotation = true; }
     return moved;
 }
-bool rotate180(State* state)              {
+bool rotate180(State* state) {
     bool moved = rotateBlock(state, RotationDirection::HALFTURN);
     if (moved) { state->was_last_rotation = true; }
     return moved;
