@@ -670,7 +670,7 @@ bool softDropToFloor(State* state) {
 }
 bool hardDrop(State* state) {
     bool was_last_rotation = state->was_last_rotation;
-    while (softDrop(state));
+    while (softDrop(state)) { was_last_rotation = false; }
     state->was_last_rotation = was_last_rotation;
     state->spin_type = getSpinType(state); // TODO: remove redundant check
     return generateBlock(state, false);
