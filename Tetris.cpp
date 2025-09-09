@@ -384,32 +384,42 @@ inline static std::pair<bool, bool> isTspin(State* state) {
         || corners[mini_check_corner_table[state->orientation].second] == 0);
     return {true, is_mini};
 }
-inline static ClearType getClearType(int lines_cleared, bool tspin, bool tspin_mini) {
-    if (tspin_mini) {
-        switch (lines_cleared) {
-        case 0: return ClearType::MINI_TSPIN;
-        case 1: return ClearType::MINI_TSPIN_SINGLE;
-        case 2: return ClearType::MINI_TSPIN_DOUBLE;
-        default: assert(false); return ClearType::NONE;
-        }
-    } else if (tspin) {
-        switch (lines_cleared) {
-        case 0: return ClearType::TSPIN;
-        case 1: return ClearType::TSPIN_SINGLE;
-        case 2: return ClearType::TSPIN_DOUBLE;
-        case 3: return ClearType::TSPIN_TRIPLE;
-        default: assert(false); return ClearType::NONE;
-        }
-    } else {
-        switch (lines_cleared) {
-        case 0: return ClearType::NONE;
-        case 1: return ClearType::SINGLE;
-        case 2: return ClearType::DOUBLE;
-        case 3: return ClearType::TRIPLE;
-        case 4: return ClearType::QUAD;
-        default: assert(false); return ClearType::NONE;
-        }
+inline static bool isAllSpin(State* state) {
+    if (state->current == Block::Type::T || !state->was_last_rotation) { return false; }
+    auto& block_data = blocks[state->current][state->orientation].data;
+    const int x_offset = state->x << 1;
+    const int y_offset = state->y + BOARD_TOP;
+    uint32_t* rows = &state->board[y_offset];
+
+    // compute block positions
+    uint32_t block_mask[4];
+    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
+
+    // remove block from board
+    for (int i = 0; i < 4; ++i) { rows[i] &= ~block_mask[i]; }
+
+    // check all-spin (piece cannot move left, right, up or down)
+    bool collisions[4] = { false, false, false, false }; // left, right, up, down
+    for (int r = 0; r < 4; ++r) {
+        collisions[0] |= (block_mask[r] & (rows[r] >> 2)) != 0; // left
+        collisions[1] |= (block_mask[r] & (rows[r] << 2)) != 0; // right
+        collisions[2] |= (block_mask[r] & (rows[r - 1])) != 0;  // up
+        collisions[3] |= (block_mask[r] & (rows[r + 1])) != 0;  // down
     }
+
+    // place block back on board
+    for (int i = 0; i < 4; ++i) { rows[i] |= block_mask[i]; }
+
+    return collisions[0] && collisions[1] && collisions[2] && collisions[3];
+}
+inline static SpinType getSpinType(State* state) {
+    if (state->current == Block::Type::T) {
+        auto [is_tspin, is_mini] = isTspin(state);
+        if (is_tspin) { return is_mini ? SpinType::SPIN_MINI : SpinType::SPIN; }
+    } else if (isAllSpin(state)) {
+        return SpinType::SPIN_MINI;
+    }
+    return SpinType::NONE;
 }
 inline static int clearLines(State* state) {
     static constexpr uint32_t fullfilled = 0b00000001010101010101010101000000u;
@@ -424,18 +434,11 @@ inline static int clearLines(State* state) {
     return count;
 }
 
-inline static bool isBackToBackClear(ClearType type) {
-    switch (type) {
-    case ClearType::QUAD:
-    case ClearType::TSPIN_SINGLE:
-    case ClearType::TSPIN_DOUBLE:
-    case ClearType::TSPIN_TRIPLE:
-    case ClearType::MINI_TSPIN_SINGLE:
-    case ClearType::MINI_TSPIN_DOUBLE:
-        return true;
-    default:
-        return false;
-    }
+inline static bool isBackToBackSpinType(Block::Type block_type, SpinType spin_type) {
+    // current ruleset: tspin only
+    if (block_type != Block::Type::T) { return false; }
+    if (spin_type == SpinType::SPIN || spin_type == SpinType::SPIN_MINI) { return true; }
+    return false;
 }
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
@@ -557,16 +560,16 @@ void reset(State* state) {
 }
 bool generateBlock(State* state, bool called_by_hold) {
     if (!called_by_hold) {
-        auto [is_tspin, is_tspin_mini] = isTspin(state);
         int line_count = clearLines(state);
         state->lines_cleared += line_count;
-        state->last_clear_type = getClearType(line_count, is_tspin, is_tspin_mini);
         state->has_held = false;
         state->piece_count++;
         if (line_count > 0) {
             state->combo_count++;
             state->back_to_back_count
-                = isBackToBackClear(state->last_clear_type) ? state->back_to_back_count + 1 : -1;
+                = (isBackToBackSpinType(state->current, state->spin_type) || line_count == 4) // T-spin or Tetris
+                ? state->back_to_back_count + 1
+                : -1;
         } else {
             state->combo_count = -1;
         }
@@ -616,62 +619,91 @@ bool generateBlock(State* state, bool called_by_hold) {
 
 bool moveLeft(State* state) {
     bool moved = moveBlock(state, state->x - 1, state->y);
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool moveRight(State* state) {
     bool moved = moveBlock(state, state->x + 1, state->y);
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool moveLeftToWall(State* state) {
     bool moved = false;
     while (moveLeft(state)) { moved = true; }
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool moveRightToWall(State* state) {
     bool moved = false;
     while (moveRight(state)) { moved = true; }
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool softDrop(State* state) {
     bool moved = moveBlock(state, state->x, state->y + 1);
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool softDropToFloor(State* state) {
     bool moved = false;
     while (softDrop(state)) { moved = true; }
-    if (moved) { state->was_last_rotation = false; }
+    if (moved) {
+        state->was_last_rotation = false;
+        state->spin_type = SpinType::NONE;
+    }
     return moved;
 }
 bool hardDrop(State* state) {
     bool was_last_rotation = state->was_last_rotation;
     while (softDrop(state));
     state->was_last_rotation = was_last_rotation;
+    state->spin_type = getSpinType(state); // TODO: remove redundant check
     return generateBlock(state, false);
 }
 bool rotateCounterclockwise(State* state) {
     bool moved = rotateBlock(state, RotationDirection::COUNTERCLOCKWISE);
-    if (moved) { state->was_last_rotation = true; }
+    if (moved) {
+        state->was_last_rotation = true;
+        state->spin_type = getSpinType(state);
+    }
     return moved;
 }
 bool rotateClockwise(State* state) {
     bool moved = rotateBlock(state, RotationDirection::CLOCKWISE);
-    if (moved) { state->was_last_rotation = true; }
+    if (moved) {
+        state->was_last_rotation = true;
+        state->spin_type = getSpinType(state);
+    }
     return moved;
 }
 bool rotate180(State* state) {
     bool moved = rotateBlock(state, RotationDirection::HALFTURN);
-    if (moved) { state->was_last_rotation = true; }
+    if (moved) {
+        state->was_last_rotation = true;
+        state->spin_type = getSpinType(state);
+    }
     return moved;
 }
 bool hold(State* state) {
     if (state->has_held) { return false; }
 
     state->was_last_rotation = false;
+    state->spin_type = SpinType::NONE;
 
     if (state->hold != Block::NONE) {
         // push the held block to the block queue

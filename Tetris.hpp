@@ -24,19 +24,10 @@ struct Block {
     uint32_t data[4];
 };
 
-enum class ClearType : uint8_t {
+enum class SpinType : uint8_t {
     NONE,
-    SINGLE,
-    DOUBLE,
-    TRIPLE,
-    QUAD,
-    TSPIN, // without line clear
-    TSPIN_SINGLE,
-    TSPIN_DOUBLE,
-    TSPIN_TRIPLE,
-    MINI_TSPIN, // without line clear
-    MINI_TSPIN_SINGLE,
-    MINI_TSPIN_DOUBLE,
+    SPIN,
+    SPIN_MINI
 };
 
 struct State {
@@ -52,8 +43,9 @@ struct State {
     uint32_t seed;
     int srs_index;
     uint32_t piece_count;
+    // TODO: remove was_last_rotation and use spin_type only
     bool was_last_rotation; // Indicates if the last successful action was a rotation
-    ClearType last_clear_type;
+    SpinType spin_type;
     int32_t back_to_back_count;
     int32_t combo_count;
 };
