@@ -308,23 +308,26 @@ inline static uint32_t xorshf32(uint32_t& seed) {
     return seed;
 }
 
-struct PackedSevenBag {
-    unsigned b0 : 3;
-    unsigned b1 : 3;
-    unsigned b2 : 3;
-    unsigned b3 : 3;
-    unsigned b4 : 3;
-    unsigned b5 : 3;
-    unsigned b6 : 3;
+struct SevenBagPermutations {
+    struct PackedSevenBag {
+        unsigned b0 : 3;
+        unsigned b1 : 3;
+        unsigned b2 : 3;
+        unsigned b3 : 3;
+        unsigned b4 : 3;
+        unsigned b5 : 3;
+        unsigned b6 : 3;
+    };
+    // 7! = 5040
+    enum { SIZE = 5040 };
+    PackedSevenBag data[SIZE];
 };
-
-// 7! = 5040
-static PackedSevenBag seven_bag_permutations[5040];
-inline static void initializeSevenBagPermutations() {
+inline static SevenBagPermutations generateSevenBagPermutations() {
+    SevenBagPermutations permutations;
     Block::Type next[] = { Block::Z, Block::L, Block::O, Block::S, Block::I, Block::J, Block::T };
     int index = 0;
     do {
-        PackedSevenBag& ref = seven_bag_permutations[index++];
+        auto& ref = permutations.data[index++];
         ref.b0 = unsigned(next[0]);
         ref.b1 = unsigned(next[1]);
         ref.b2 = unsigned(next[2]);
@@ -333,10 +336,13 @@ inline static void initializeSevenBagPermutations() {
         ref.b5 = unsigned(next[5]);
         ref.b6 = unsigned(next[6]);
     } while (std::next_permutation(next, next + 7));
+    assert(index == SevenBagPermutations::SIZE);
+    return permutations;
 }
 
 inline static void randomBlocks(Block::Type dest[], uint32_t& seed) {
-    PackedSevenBag& ref = seven_bag_permutations[xorshf32(seed) % 5040];
+    static const SevenBagPermutations seven_bag_permutations = generateSevenBagPermutations();
+    auto& ref = seven_bag_permutations.data[xorshf32(seed) % SevenBagPermutations::SIZE];
     dest[0] = Block::Type(ref.b0);
     dest[1] = Block::Type(ref.b1);
     dest[2] = Block::Type(ref.b2);
@@ -846,10 +852,3 @@ bool pasteCurrent(State* state) {
 
     return true;
 }
-
-static int initialize() {
-    initializeSevenBagPermutations();
-    return 0;
-}
-
-static int _ = initialize();
