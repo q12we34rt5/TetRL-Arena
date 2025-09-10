@@ -635,7 +635,7 @@ bool moveRight(State* state) {
 }
 bool moveLeftToWall(State* state) {
     bool moved = false;
-    while (moveLeft(state)) { moved = true; }
+    while (moveBlock(state, state->x - 1, state->y)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -644,7 +644,7 @@ bool moveLeftToWall(State* state) {
 }
 bool moveRightToWall(State* state) {
     bool moved = false;
-    while (moveRight(state)) { moved = true; }
+    while (moveBlock(state, state->x + 1, state->y)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -661,7 +661,7 @@ bool softDrop(State* state) {
 }
 bool softDropToFloor(State* state) {
     bool moved = false;
-    while (softDrop(state)) { moved = true; }
+    while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -669,9 +669,9 @@ bool softDropToFloor(State* state) {
     return moved;
 }
 bool hardDrop(State* state) {
-    bool was_last_rotation = state->was_last_rotation;
-    while (softDrop(state)) { was_last_rotation = false; }
-    state->was_last_rotation = was_last_rotation;
+    bool moved = false;
+    while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
+    if (moved) { state->was_last_rotation = false; }
     state->spin_type = getSpinType(state); // TODO: remove redundant check
     return generateBlock(state, false);
 }
