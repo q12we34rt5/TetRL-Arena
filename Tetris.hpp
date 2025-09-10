@@ -57,15 +57,15 @@ struct SRSKickData {
     const int length;
 };
 
-enum class RotationDirection : uint8_t { // TODO: rename RotationDirection -> Rotation?
-    CLOCKWISE,
-    COUNTERCLOCKWISE,
-    HALFTURN, // 180
+enum class Rotation : uint8_t {
+    CW,
+    CCW,
+    HALF, // 180
     SIZE
 };
 
 extern const Block blocks[Block::Type::SIZE][4];
-extern const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZE)];
+extern const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(Rotation::SIZE)];
 
 void setSeed(State* state, uint32_t seed);
 

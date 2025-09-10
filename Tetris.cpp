@@ -144,8 +144,8 @@ const Block blocks[Block::Type::SIZE][4] = {{
      0b00000000000000000000000000000000u}}
 };
 
-inline static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, RotationDirection direction) {
-    // [<block-rotation>][<direction>][<srs-index>]
+inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, Rotation rot) {
+    // [<block-orientation>][<rotate-direction>][<srs-index>]
     static const SRSKickData::Kick JLSTZ[4][2][5] = {{
             {{ 0,  0}, {-1,  0}, {-1,  1}, { 0, -2}, {-1, -2}},          // 0 -> 1
             {{ 0,  0}, { 1,  0}, { 1,  1}, { 0, -2}, { 1, -2}},          // 0 -> 3
@@ -214,40 +214,40 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, Rota
     case Block::Type::S:
     case Block::Type::T:
     case Block::Type::Z:
-        if (direction == RotationDirection::CLOCKWISE || direction == RotationDirection::COUNTERCLOCKWISE) {
+        if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = JLSTZ[rotation][uint8_t(direction)],
+                .kicks  = JLSTZ[orientation][uint8_t(rot)],
                 .length = 5
             };
-        } else if (direction == RotationDirection::HALFTURN) {
+        } else if (rot == Rotation::HALF) {
             return {
-                .kicks  = JLSTZ180[rotation][0],
+                .kicks  = JLSTZ180[orientation][0],
                 .length = 6
             };
         }
         break;
     case Block::Type::I:
-        if (direction == RotationDirection::CLOCKWISE || direction == RotationDirection::COUNTERCLOCKWISE) {
+        if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = I[rotation][uint8_t(direction)],
+                .kicks  = I[orientation][uint8_t(rot)],
                 .length = 5
             };
-        } else if (direction == RotationDirection::HALFTURN) {
+        } else if (rot == Rotation::HALF) {
             return {
-                .kicks  = IO180[rotation][0],
+                .kicks  = IO180[orientation][0],
                 .length = 1
             };
         }
         break;
     case Block::Type::O:
-        if (direction == RotationDirection::CLOCKWISE || direction == RotationDirection::COUNTERCLOCKWISE) {
+        if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = O[rotation][uint8_t(direction)],
+                .kicks  = O[orientation][uint8_t(rot)],
                 .length = 1
             };
-        } else if (direction == RotationDirection::HALFTURN) {
+        } else if (rot == Rotation::HALF) {
             return {
-                .kicks  = IO180[rotation][0],
+                .kicks  = IO180[orientation][0],
                 .length = 1
             };
         }
@@ -261,43 +261,43 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t rotation, Rota
     };
 }
 
-// srs_table[<block-type>][<block-rotation>][<direction>].kicks[<srs-index>]
-const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(RotationDirection::SIZE)] = {
+// srs_table[<block-type>][<block-orientation>][<rotate-direction>].kicks[<srs-index>]
+const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(Rotation::SIZE)] = {
     {
-        {getSRSKickData(Block::Type::Z, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::Z, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::Z, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::Z, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::Z, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::Z, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::Z, 0, Rotation::CW), getSRSKickData(Block::Type::Z, 0, Rotation::CCW), getSRSKickData(Block::Type::Z, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::Z, 1, Rotation::CW), getSRSKickData(Block::Type::Z, 1, Rotation::CCW), getSRSKickData(Block::Type::Z, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::Z, 2, Rotation::CW), getSRSKickData(Block::Type::Z, 2, Rotation::CCW), getSRSKickData(Block::Type::Z, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::Z, 3, Rotation::CW), getSRSKickData(Block::Type::Z, 3, Rotation::CCW), getSRSKickData(Block::Type::Z, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::L, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::L, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::L, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::L, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::L, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::L, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::L, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::L, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::L, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::L, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::L, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::L, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::L, 0, Rotation::CW), getSRSKickData(Block::Type::L, 0, Rotation::CCW), getSRSKickData(Block::Type::L, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::L, 1, Rotation::CW), getSRSKickData(Block::Type::L, 1, Rotation::CCW), getSRSKickData(Block::Type::L, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::L, 2, Rotation::CW), getSRSKickData(Block::Type::L, 2, Rotation::CCW), getSRSKickData(Block::Type::L, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::L, 3, Rotation::CW), getSRSKickData(Block::Type::L, 3, Rotation::CCW), getSRSKickData(Block::Type::L, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::O, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::O, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::O, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::O, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::O, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::O, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::O, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::O, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::O, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::O, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::O, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::O, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::O, 0, Rotation::CW), getSRSKickData(Block::Type::O, 0, Rotation::CCW), getSRSKickData(Block::Type::O, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::O, 1, Rotation::CW), getSRSKickData(Block::Type::O, 1, Rotation::CCW), getSRSKickData(Block::Type::O, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::O, 2, Rotation::CW), getSRSKickData(Block::Type::O, 2, Rotation::CCW), getSRSKickData(Block::Type::O, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::O, 3, Rotation::CW), getSRSKickData(Block::Type::O, 3, Rotation::CCW), getSRSKickData(Block::Type::O, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::S, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::S, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::S, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::S, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::S, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::S, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::S, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::S, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::S, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::S, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::S, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::S, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::S, 0, Rotation::CW), getSRSKickData(Block::Type::S, 0, Rotation::CCW), getSRSKickData(Block::Type::S, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::S, 1, Rotation::CW), getSRSKickData(Block::Type::S, 1, Rotation::CCW), getSRSKickData(Block::Type::S, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::S, 2, Rotation::CW), getSRSKickData(Block::Type::S, 2, Rotation::CCW), getSRSKickData(Block::Type::S, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::S, 3, Rotation::CW), getSRSKickData(Block::Type::S, 3, Rotation::CCW), getSRSKickData(Block::Type::S, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::I, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::I, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::I, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::I, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::I, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::I, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::I, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::I, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::I, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::I, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::I, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::I, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::I, 0, Rotation::CW), getSRSKickData(Block::Type::I, 0, Rotation::CCW), getSRSKickData(Block::Type::I, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::I, 1, Rotation::CW), getSRSKickData(Block::Type::I, 1, Rotation::CCW), getSRSKickData(Block::Type::I, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::I, 2, Rotation::CW), getSRSKickData(Block::Type::I, 2, Rotation::CCW), getSRSKickData(Block::Type::I, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::I, 3, Rotation::CW), getSRSKickData(Block::Type::I, 3, Rotation::CCW), getSRSKickData(Block::Type::I, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::J, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::J, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::J, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::J, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::J, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::J, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::J, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::J, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::J, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::J, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::J, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::J, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::J, 0, Rotation::CW), getSRSKickData(Block::Type::J, 0, Rotation::CCW), getSRSKickData(Block::Type::J, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::J, 1, Rotation::CW), getSRSKickData(Block::Type::J, 1, Rotation::CCW), getSRSKickData(Block::Type::J, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::J, 2, Rotation::CW), getSRSKickData(Block::Type::J, 2, Rotation::CCW), getSRSKickData(Block::Type::J, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::J, 3, Rotation::CW), getSRSKickData(Block::Type::J, 3, Rotation::CCW), getSRSKickData(Block::Type::J, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::T, 0, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::T, 0, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::T, 0, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::T, 1, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::T, 1, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::T, 1, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::T, 2, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::T, 2, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::T, 2, RotationDirection::HALFTURN)},
-        {getSRSKickData(Block::Type::T, 3, RotationDirection::CLOCKWISE), getSRSKickData(Block::Type::T, 3, RotationDirection::COUNTERCLOCKWISE), getSRSKickData(Block::Type::T, 3, RotationDirection::HALFTURN)}
+        {getSRSKickData(Block::Type::T, 0, Rotation::CW), getSRSKickData(Block::Type::T, 0, Rotation::CCW), getSRSKickData(Block::Type::T, 0, Rotation::HALF)},
+        {getSRSKickData(Block::Type::T, 1, Rotation::CW), getSRSKickData(Block::Type::T, 1, Rotation::CCW), getSRSKickData(Block::Type::T, 1, Rotation::HALF)},
+        {getSRSKickData(Block::Type::T, 2, Rotation::CW), getSRSKickData(Block::Type::T, 2, Rotation::CCW), getSRSKickData(Block::Type::T, 2, Rotation::HALF)},
+        {getSRSKickData(Block::Type::T, 3, Rotation::CW), getSRSKickData(Block::Type::T, 3, Rotation::CCW), getSRSKickData(Block::Type::T, 3, Rotation::HALF)}
     },
 };
 
@@ -483,18 +483,18 @@ inline static bool moveBlock(State* state, int new_x, int new_y) {
 
     return !collision;
 }
-inline static bool rotateBlock(State* state, RotationDirection dir) {
-    constexpr int8_t orientation_delta_table[uint8_t(RotationDirection::SIZE)] = {
-        1, // CW
-        3, // CCW
-        2, // 180
+inline static bool rotateBlock(State* state, Rotation rot) {
+    constexpr int8_t orientation_delta_table[uint8_t(Rotation::SIZE)] = {
+        1, // CW  -> orientation + 1
+        3, // CCW -> orientation - 1 (= +3 mod 4)
+        2, // 180 -> orientation + 2
     };
 
-    const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(dir)]) % 4;
+    const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(rot)]) % 4;
 
     // SRS kicks for CW/CCW/180
-    auto& kicks = srs_table[state->current][state->orientation][uint8_t(dir)].kicks;
-    auto  len   = srs_table[state->current][state->orientation][uint8_t(dir)].length;
+    auto& kicks = srs_table[state->current][state->orientation][uint8_t(rot)].kicks;
+    auto  len   = srs_table[state->current][state->orientation][uint8_t(rot)].length;
 
     // current orientation bitmasks at current (x,y)
     const auto& cur_data = blocks[state->current][state->orientation].data;
@@ -682,7 +682,7 @@ bool hardDrop(State* state) {
     return generateBlock(state, false);
 }
 bool rotateCounterclockwise(State* state) {
-    bool moved = rotateBlock(state, RotationDirection::COUNTERCLOCKWISE);
+    bool moved = rotateBlock(state, Rotation::CCW);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
@@ -690,7 +690,7 @@ bool rotateCounterclockwise(State* state) {
     return moved;
 }
 bool rotateClockwise(State* state) {
-    bool moved = rotateBlock(state, RotationDirection::CLOCKWISE);
+    bool moved = rotateBlock(state, Rotation::CW);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
@@ -698,7 +698,7 @@ bool rotateClockwise(State* state) {
     return moved;
 }
 bool rotate180(State* state) {
-    bool moved = rotateBlock(state, RotationDirection::HALFTURN);
+    bool moved = rotateBlock(state, Rotation::HALF);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
