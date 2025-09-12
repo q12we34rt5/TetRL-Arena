@@ -20,131 +20,16 @@ struct Wrapper {
         template<typename x> struct If<true, x> { static constexpr uint32_t value = wall; };
         template<typename x> struct If<false, x> { static constexpr uint32_t value = row; };
 
-        static const uint32_t board[height];
+        static const Rows<height> board;
     };
 };
 template<int ...args>
 template<int height, int padding, uint32_t row, uint32_t wall>
-const uint32_t Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::board[height] = {
+const Rows<height> Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::board = {
     Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
 };
 
-const Block blocks[Block::Type::SIZE][4] = {{
-    {0b11110000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00001100000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b11000000000000000000000000000000u,
-     0b00000000000000000000000000000000u}},
-{   {0b00001100000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b11000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b11110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u}},
-{   {0b00111100000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00111100000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00111100000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00111100000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u}},
-{   {0b00111100000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00001100000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b11000000000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u}},
-{   {0b00000000000000000000000000000000u,
-     0b11111111000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00001100000000000000000000000000u,
-     0b00001100000000000000000000000000u,
-     0b00001100000000000000000000000000u,
-     0b00001100000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b11111111000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u}},
-{   {0b11000000000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00111100000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b00001100000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00000000000000000000000000000000u}},
-{   {0b00110000000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b00000000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b00111100000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00000000000000000000000000000000u,
-     0b11111100000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u},
-    {0b00110000000000000000000000000000u,
-     0b11110000000000000000000000000000u,
-     0b00110000000000000000000000000000u,
-     0b00000000000000000000000000000000u}}
-};
-
-inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, Rotation rot) {
+inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rotation rot) {
     // [<block-orientation>][<rotate-direction>][<srs-index>]
     static const SRSKickData::Kick JLSTZ[4][2][5] = {{
             {{ 0,  0}, {-1,  0}, {-1,  1}, { 0, -2}, {-1, -2}},          // 0 -> 1
@@ -209,11 +94,11 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, R
         }
     };
     switch (type) {
-    case Block::Type::J:
-    case Block::Type::L:
-    case Block::Type::S:
-    case Block::Type::T:
-    case Block::Type::Z:
+    case BlockType::J:
+    case BlockType::L:
+    case BlockType::S:
+    case BlockType::T:
+    case BlockType::Z:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = JLSTZ[orientation][uint8_t(rot)],
@@ -226,7 +111,7 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, R
             };
         }
         break;
-    case Block::Type::I:
+    case BlockType::I:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = I[orientation][uint8_t(rot)],
@@ -239,7 +124,7 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, R
             };
         }
         break;
-    case Block::Type::O:
+    case BlockType::O:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = O[orientation][uint8_t(rot)],
@@ -262,42 +147,42 @@ inline static SRSKickData getSRSKickData(Block::Type type, int8_t orientation, R
 }
 
 // srs_table[<block-type>][<block-orientation>][<rotate-direction>].kicks[<srs-index>]
-const SRSKickData srs_table[Block::Type::SIZE][4][uint8_t(Rotation::SIZE)] = {
+const SRSKickData srs_table[int8_t(BlockType::SIZE)][4][uint8_t(Rotation::SIZE)] = {
     {
-        {getSRSKickData(Block::Type::Z, 0, Rotation::CW), getSRSKickData(Block::Type::Z, 0, Rotation::CCW), getSRSKickData(Block::Type::Z, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::Z, 1, Rotation::CW), getSRSKickData(Block::Type::Z, 1, Rotation::CCW), getSRSKickData(Block::Type::Z, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::Z, 2, Rotation::CW), getSRSKickData(Block::Type::Z, 2, Rotation::CCW), getSRSKickData(Block::Type::Z, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::Z, 3, Rotation::CW), getSRSKickData(Block::Type::Z, 3, Rotation::CCW), getSRSKickData(Block::Type::Z, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::Z, 0, Rotation::CW), getSRSKickData(BlockType::Z, 0, Rotation::CCW), getSRSKickData(BlockType::Z, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::Z, 1, Rotation::CW), getSRSKickData(BlockType::Z, 1, Rotation::CCW), getSRSKickData(BlockType::Z, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::Z, 2, Rotation::CW), getSRSKickData(BlockType::Z, 2, Rotation::CCW), getSRSKickData(BlockType::Z, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::Z, 3, Rotation::CW), getSRSKickData(BlockType::Z, 3, Rotation::CCW), getSRSKickData(BlockType::Z, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::L, 0, Rotation::CW), getSRSKickData(Block::Type::L, 0, Rotation::CCW), getSRSKickData(Block::Type::L, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::L, 1, Rotation::CW), getSRSKickData(Block::Type::L, 1, Rotation::CCW), getSRSKickData(Block::Type::L, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::L, 2, Rotation::CW), getSRSKickData(Block::Type::L, 2, Rotation::CCW), getSRSKickData(Block::Type::L, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::L, 3, Rotation::CW), getSRSKickData(Block::Type::L, 3, Rotation::CCW), getSRSKickData(Block::Type::L, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::L, 0, Rotation::CW), getSRSKickData(BlockType::L, 0, Rotation::CCW), getSRSKickData(BlockType::L, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::L, 1, Rotation::CW), getSRSKickData(BlockType::L, 1, Rotation::CCW), getSRSKickData(BlockType::L, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::L, 2, Rotation::CW), getSRSKickData(BlockType::L, 2, Rotation::CCW), getSRSKickData(BlockType::L, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::L, 3, Rotation::CW), getSRSKickData(BlockType::L, 3, Rotation::CCW), getSRSKickData(BlockType::L, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::O, 0, Rotation::CW), getSRSKickData(Block::Type::O, 0, Rotation::CCW), getSRSKickData(Block::Type::O, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::O, 1, Rotation::CW), getSRSKickData(Block::Type::O, 1, Rotation::CCW), getSRSKickData(Block::Type::O, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::O, 2, Rotation::CW), getSRSKickData(Block::Type::O, 2, Rotation::CCW), getSRSKickData(Block::Type::O, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::O, 3, Rotation::CW), getSRSKickData(Block::Type::O, 3, Rotation::CCW), getSRSKickData(Block::Type::O, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::O, 0, Rotation::CW), getSRSKickData(BlockType::O, 0, Rotation::CCW), getSRSKickData(BlockType::O, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::O, 1, Rotation::CW), getSRSKickData(BlockType::O, 1, Rotation::CCW), getSRSKickData(BlockType::O, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::O, 2, Rotation::CW), getSRSKickData(BlockType::O, 2, Rotation::CCW), getSRSKickData(BlockType::O, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::O, 3, Rotation::CW), getSRSKickData(BlockType::O, 3, Rotation::CCW), getSRSKickData(BlockType::O, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::S, 0, Rotation::CW), getSRSKickData(Block::Type::S, 0, Rotation::CCW), getSRSKickData(Block::Type::S, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::S, 1, Rotation::CW), getSRSKickData(Block::Type::S, 1, Rotation::CCW), getSRSKickData(Block::Type::S, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::S, 2, Rotation::CW), getSRSKickData(Block::Type::S, 2, Rotation::CCW), getSRSKickData(Block::Type::S, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::S, 3, Rotation::CW), getSRSKickData(Block::Type::S, 3, Rotation::CCW), getSRSKickData(Block::Type::S, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::S, 0, Rotation::CW), getSRSKickData(BlockType::S, 0, Rotation::CCW), getSRSKickData(BlockType::S, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::S, 1, Rotation::CW), getSRSKickData(BlockType::S, 1, Rotation::CCW), getSRSKickData(BlockType::S, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::S, 2, Rotation::CW), getSRSKickData(BlockType::S, 2, Rotation::CCW), getSRSKickData(BlockType::S, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::S, 3, Rotation::CW), getSRSKickData(BlockType::S, 3, Rotation::CCW), getSRSKickData(BlockType::S, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::I, 0, Rotation::CW), getSRSKickData(Block::Type::I, 0, Rotation::CCW), getSRSKickData(Block::Type::I, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::I, 1, Rotation::CW), getSRSKickData(Block::Type::I, 1, Rotation::CCW), getSRSKickData(Block::Type::I, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::I, 2, Rotation::CW), getSRSKickData(Block::Type::I, 2, Rotation::CCW), getSRSKickData(Block::Type::I, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::I, 3, Rotation::CW), getSRSKickData(Block::Type::I, 3, Rotation::CCW), getSRSKickData(Block::Type::I, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::I, 0, Rotation::CW), getSRSKickData(BlockType::I, 0, Rotation::CCW), getSRSKickData(BlockType::I, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::I, 1, Rotation::CW), getSRSKickData(BlockType::I, 1, Rotation::CCW), getSRSKickData(BlockType::I, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::I, 2, Rotation::CW), getSRSKickData(BlockType::I, 2, Rotation::CCW), getSRSKickData(BlockType::I, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::I, 3, Rotation::CW), getSRSKickData(BlockType::I, 3, Rotation::CCW), getSRSKickData(BlockType::I, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::J, 0, Rotation::CW), getSRSKickData(Block::Type::J, 0, Rotation::CCW), getSRSKickData(Block::Type::J, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::J, 1, Rotation::CW), getSRSKickData(Block::Type::J, 1, Rotation::CCW), getSRSKickData(Block::Type::J, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::J, 2, Rotation::CW), getSRSKickData(Block::Type::J, 2, Rotation::CCW), getSRSKickData(Block::Type::J, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::J, 3, Rotation::CW), getSRSKickData(Block::Type::J, 3, Rotation::CCW), getSRSKickData(Block::Type::J, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::J, 0, Rotation::CW), getSRSKickData(BlockType::J, 0, Rotation::CCW), getSRSKickData(BlockType::J, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::J, 1, Rotation::CW), getSRSKickData(BlockType::J, 1, Rotation::CCW), getSRSKickData(BlockType::J, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::J, 2, Rotation::CW), getSRSKickData(BlockType::J, 2, Rotation::CCW), getSRSKickData(BlockType::J, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::J, 3, Rotation::CW), getSRSKickData(BlockType::J, 3, Rotation::CCW), getSRSKickData(BlockType::J, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(Block::Type::T, 0, Rotation::CW), getSRSKickData(Block::Type::T, 0, Rotation::CCW), getSRSKickData(Block::Type::T, 0, Rotation::HALF)},
-        {getSRSKickData(Block::Type::T, 1, Rotation::CW), getSRSKickData(Block::Type::T, 1, Rotation::CCW), getSRSKickData(Block::Type::T, 1, Rotation::HALF)},
-        {getSRSKickData(Block::Type::T, 2, Rotation::CW), getSRSKickData(Block::Type::T, 2, Rotation::CCW), getSRSKickData(Block::Type::T, 2, Rotation::HALF)},
-        {getSRSKickData(Block::Type::T, 3, Rotation::CW), getSRSKickData(Block::Type::T, 3, Rotation::CCW), getSRSKickData(Block::Type::T, 3, Rotation::HALF)}
+        {getSRSKickData(BlockType::T, 0, Rotation::CW), getSRSKickData(BlockType::T, 0, Rotation::CCW), getSRSKickData(BlockType::T, 0, Rotation::HALF)},
+        {getSRSKickData(BlockType::T, 1, Rotation::CW), getSRSKickData(BlockType::T, 1, Rotation::CCW), getSRSKickData(BlockType::T, 1, Rotation::HALF)},
+        {getSRSKickData(BlockType::T, 2, Rotation::CW), getSRSKickData(BlockType::T, 2, Rotation::CCW), getSRSKickData(BlockType::T, 2, Rotation::HALF)},
+        {getSRSKickData(BlockType::T, 3, Rotation::CW), getSRSKickData(BlockType::T, 3, Rotation::CCW), getSRSKickData(BlockType::T, 3, Rotation::HALF)}
     },
 };
 
@@ -324,7 +209,7 @@ struct SevenBagPermutations {
 };
 inline static SevenBagPermutations generateSevenBagPermutations() {
     SevenBagPermutations permutations;
-    Block::Type next[] = { Block::Z, Block::L, Block::O, Block::S, Block::I, Block::J, Block::T };
+    BlockType next[] = { BlockType::Z, BlockType::L, BlockType::O, BlockType::S, BlockType::I, BlockType::J, BlockType::T };
     int index = 0;
     do {
         auto& ref = permutations.data[index++];
@@ -340,38 +225,37 @@ inline static SevenBagPermutations generateSevenBagPermutations() {
     return permutations;
 }
 
-inline static void randomBlocks(Block::Type dest[], uint32_t& seed) {
+inline static void randomBlocks(BlockType dest[], uint32_t& seed) {
     static const SevenBagPermutations seven_bag_permutations = generateSevenBagPermutations();
     auto& ref = seven_bag_permutations.data[xorshf32(seed) % SevenBagPermutations::SIZE];
-    dest[0] = Block::Type(ref.b0);
-    dest[1] = Block::Type(ref.b1);
-    dest[2] = Block::Type(ref.b2);
-    dest[3] = Block::Type(ref.b3);
-    dest[4] = Block::Type(ref.b4);
-    dest[5] = Block::Type(ref.b5);
-    dest[6] = Block::Type(ref.b6);
+    dest[0] = BlockType(ref.b0);
+    dest[1] = BlockType(ref.b1);
+    dest[2] = BlockType(ref.b2);
+    dest[3] = BlockType(ref.b3);
+    dest[4] = BlockType(ref.b4);
+    dest[5] = BlockType(ref.b5);
+    dest[6] = BlockType(ref.b6);
 }
 
 inline static void clean(State* state) {
     using Initializer = IndexGenerator<Wrapper, BOARD_HEIGHT>::result::BoardInitializer<BOARD_HEIGHT, BOARD_PADDING,
-        0b11111100000000000000000000111111u,  // row data
-        0b11111111111111111111111111111111u>; // wall data
-    memcpy(state->board, Initializer::board, sizeof(state->board));
+        mkrow("BBB          BBB"),  // row data
+        mkrow("BBBBBBBBBBBBBBBB")>; // wall data
+    state->board = Initializer::board;
 }
 
 // returns {is_tspin, is_mini_tspin}
 inline static std::pair<bool, bool> isTspin(State* state) {
-    if (state->current != Block::Type::T || !state->was_last_rotation) { return {false, false}; }
-    constexpr uint32_t mask = 0b11000000000000000000000000000000u;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t& row0 = state->board[y_offset + 0];
-    uint32_t& row2 = state->board[y_offset + 2];
+    if (state->current != BlockType::T || !state->was_last_rotation) { return {false, false}; }
+    // check corners around the T block
+    // |0# | #1| # | # |
+    // |###|###|###|###|
+    // |   |   |2  |  3|
     bool corners[4] = {
-        (row0 & mask >> x_offset) != 0,
-        (row0 & mask >> x_offset + 4) != 0,
-        (row2 & mask >> x_offset) != 0,
-        (row2 & mask >> x_offset + 4) != 0
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y + BOARD_TOP),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y + BOARD_TOP),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y + BOARD_TOP + 2),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y + BOARD_TOP + 2),
     };
     int count = 0;
     for (int i = 0; i < 4; ++i) { count += corners[i]; }
@@ -391,35 +275,21 @@ inline static std::pair<bool, bool> isTspin(State* state) {
     return {true, is_mini};
 }
 inline static bool isAllSpin(State* state) {
-    if (state->current == Block::Type::T || !state->was_last_rotation) { return false; }
-    auto& block_data = blocks[state->current][state->orientation].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute block positions
-    uint32_t block_mask[4];
-    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
-
-    // remove block from board
-    for (int i = 0; i < 4; ++i) { rows[i] &= ~block_mask[i]; }
-
+    if (state->current == BlockType::T || !state->was_last_rotation) { return false; }
+    auto& block = ops::getBlock(state->current, state->orientation);
+    ops::removeBlock(state->board, block, state->x, state->y + BOARD_TOP);
     // check all-spin (piece cannot move left, right, up or down)
-    bool collisions[4] = { false, false, false, false }; // left, right, up, down
-    for (int r = 0; r < 4; ++r) {
-        collisions[0] |= (block_mask[r] & (rows[r] >> 2)) != 0; // left
-        collisions[1] |= (block_mask[r] & (rows[r] << 2)) != 0; // right
-        collisions[2] |= (block_mask[r] & (rows[r - 1])) != 0;  // up
-        collisions[3] |= (block_mask[r] & (rows[r + 1])) != 0;  // down
-    }
-
-    // place block back on board
-    for (int i = 0; i < 4; ++i) { rows[i] |= block_mask[i]; }
-
+    bool collisions[4] = {
+        !ops::canPlaceBlock(state->board, block, state->x - 1, state->y + BOARD_TOP),     // left
+        !ops::canPlaceBlock(state->board, block, state->x + 1, state->y + BOARD_TOP),     // right
+        !ops::canPlaceBlock(state->board, block, state->x,     state->y + BOARD_TOP - 1), // up
+        !ops::canPlaceBlock(state->board, block, state->x,     state->y + BOARD_TOP + 1), // down
+    };
+    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
     return collisions[0] && collisions[1] && collisions[2] && collisions[3];
 }
 inline static SpinType getSpinType(State* state) {
-    if (state->current == Block::Type::T) {
+    if (state->current == BlockType::T) {
         auto [is_tspin, is_mini] = isTspin(state);
         if (is_tspin) { return is_mini ? SpinType::SPIN_MINI : SpinType::SPIN; }
     } else if (isAllSpin(state)) {
@@ -428,60 +298,35 @@ inline static SpinType getSpinType(State* state) {
     return SpinType::NONE;
 }
 inline static int clearLines(State* state) {
-    static constexpr uint32_t fullfilled = 0b00000001010101010101010101000000u;
+    constexpr uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
     int count = 0;
     for (int i = BOARD_BOTTOM; i >= BOARD_TOP - 3 /* TODO: Fix this */; i--) {
-        while ((state->board[i - count] & fullfilled) == fullfilled) {
-            state->board[i - count] = 0b11111100000000000000000000111111u;
+        while ((state->board.data[i - count] & fullfilled) == fullfilled) {
+            state->board.data[i - count] = mkrow("BBB..........BBB");
             count++;
         }
-        state->board[i] = state->board[i - count];
+        state->board.data[i] = state->board.data[i - count];
     }
     return count;
 }
 
-inline static bool isBackToBackSpinType(Block::Type block_type, SpinType spin_type) {
+inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type) {
     // current ruleset: tspin only
-    if (block_type != Block::Type::T) { return false; }
+    if (block_type != BlockType::T) { return false; }
     if (spin_type == SpinType::SPIN || spin_type == SpinType::SPIN_MINI) { return true; }
     return false;
 }
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
-    const auto& block_data = blocks[state->current][state->orientation].data;
-    const int old_x_offset = state->x << 1;
-    const int old_y_offset = state->y + BOARD_TOP;
-    const int new_x_offset = new_x << 1;
-    const int new_y_offset = new_y + BOARD_TOP;
-    uint32_t* old_rows = &state->board[old_y_offset];
-    uint32_t* new_rows = &state->board[new_y_offset];
-
-    // compute old and new block positions
-    uint32_t old_mask[4];
-    uint32_t new_mask[4];
-    for (int i = 0; i < 4; ++i) {
-        const uint32_t r = block_data[i];
-        old_mask[i] = r >> old_x_offset;
-        new_mask[i] = r >> new_x_offset;
-    }
-
-    // remove old block from board
-    for (int i = 0; i < 4; ++i) { old_rows[i] &= ~old_mask[i]; }
-
-    // test new block position
-    bool collision = false;
-    for (int r = 0; r < 4; ++r) { collision |= (new_mask[r] & new_rows[r]) != 0; }
-
-    // place block on board
-    if (collision) {
-        for (int i = 0; i < 4; ++i) { old_rows[i] |= old_mask[i]; }
-    } else {
+    auto& block = ops::getBlock(state->current, state->orientation);
+    ops::removeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y + BOARD_TOP);
+    if (can_place) {
         state->x = new_x;
         state->y = new_y;
-        for (int i = 0; i < 4; ++i) { new_rows[i] |= new_mask[i]; }
     }
-
-    return !collision;
+    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    return can_place;
 }
 inline static bool rotateBlock(State* state, Rotation rot) {
     constexpr int8_t orientation_delta_table[uint8_t(Rotation::SIZE)] = {
@@ -489,55 +334,27 @@ inline static bool rotateBlock(State* state, Rotation rot) {
         3, // CCW -> orientation - 1 (= +3 mod 4)
         2, // 180 -> orientation + 2
     };
-
     const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(rot)]) % 4;
-
+    auto& old_block = ops::getBlock(state->current, state->orientation);
+    auto& new_block = ops::getBlock(state->current, new_orientation);
+    ops::removeBlock(state->board, old_block, state->x, state->y + BOARD_TOP);
     // SRS kicks for CW/CCW/180
-    auto& kicks = srs_table[state->current][state->orientation][uint8_t(rot)].kicks;
-    auto  len   = srs_table[state->current][state->orientation][uint8_t(rot)].length;
-
-    // current orientation bitmasks at current (x,y)
-    const auto& cur_data = blocks[state->current][state->orientation].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute old block positions
-    uint32_t old_mask[4];
-    for (int i = 0; i < 4; ++i) { old_mask[i] = cur_data[i] >> x_offset; }
-
-    // erase current piece to avoid self-collision
-    for (int i = 0; i < 4; ++i) { rows[i] &= ~old_mask[i]; }
-
-    // rotated orientation masks source
-    const auto& rot_data = blocks[state->current][new_orientation].data;
-
+    auto& [kicks, len] = srs_table[int8_t(state->current)][state->orientation][uint8_t(rot)];
     // try SRS kicks
     for (int i = 0; i < len; ++i) {
-        const int dx_bits = kicks[i].x << 1;
-        const int test_x  = x_offset + dx_bits;
-        const int test_y  = y_offset - kicks[i].y; // board rows pointer for candidate
-        uint32_t* test_rows = &state->board[test_y];
-
-        uint32_t new_mask[4];
-        for (int r = 0; r < 4; ++r) { new_mask[r] = rot_data[r] >> test_x; }
-
-        bool collision = false;
-        for (int r = 0; r < 4; ++r) { collision |= (new_mask[r] & test_rows[r]) != 0; }
-
-        if (!collision) {
+        const int test_x = state->x + kicks[i].x;
+        const int test_y = state->y - kicks[i].y;
+        if (ops::canPlaceBlock(state->board, new_block, test_x, test_y + BOARD_TOP)) {
             // commit rotation + kick
             state->orientation = new_orientation;
-            state->x += kicks[i].x;
-            state->y -= kicks[i].y;
-            for (int r = 0; r < 4; ++r) { test_rows[r] |= new_mask[r]; }
+            state->x = test_x;
+            state->y = test_y;
+            ops::placeBlock(state->board, new_block, state->x, state->y + BOARD_TOP);
             state->srs_index = i;
             return true;
         }
     }
-
-    // restore original piece if all kicks fail
-    for (int i = 0; i < 4; ++i) { rows[i] |= old_mask[i]; }
+    ops::placeBlock(state->board, old_block, state->x, state->y + BOARD_TOP);
     return false;
 }
 
@@ -550,9 +367,9 @@ void reset(State* state) {
     state->is_alive = true;
     randomBlocks(state->next, state->seed);
     randomBlocks(state->next + 7, state->seed);
-    state->hold = Block::NONE;
+    state->hold = BlockType::NONE;
     state->has_held = false;
-    state->current = Block::NONE;
+    state->current = BlockType::NONE;
     state->orientation = 0;
     state->x = -1;
     state->y = -1;
@@ -580,46 +397,29 @@ bool generateBlock(State* state, bool called_by_hold) {
             state->combo_count = -1;
         }
     }
-
+    // reset state for new block
     state->srs_index = -1;
     state->was_last_rotation = false;
-
-    Block::Type cur = state->next[0];
+    // state->spin_type = SpinType::NONE; // postpone for tracking last spin type
+    // set new current block
+    state->current = state->next[0];
     state->x = BOARD_LEFT + 3;
     state->y = 0;
     state->orientation = 0;
-
-    auto& block_data = blocks[cur][0].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute new block positions
-    uint32_t new_mask[4];
-    for (int i = 0; i < 4; ++i) { new_mask[i] = block_data[i] >> x_offset; }
-
-    // test collision
-    bool collision = false;
-    for (int i = 0; i < 4; ++i) { collision |= (new_mask[i] & rows[i]) != 0; }
-
+    // shift the next blocks
+    for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
+    state->next[13] = BlockType::NONE;
+    // generate new random blocks if needed
+    if (state->next[7] == BlockType::NONE) { randomBlocks(state->next + 7, state->seed); }
+    // spawn the new block
+    auto& block = ops::getBlock(state->current, state->orientation);
+    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y + BOARD_TOP);
     // Top out rule (https://tetris.wiki/Top_out)
-    if (collision) {
+    if (!can_place) {
         state->is_alive = false;
         return false;
     }
-
-    state->current = cur;
-
-    // commit new block positions
-    for (int i = 0; i < 4; ++i) { rows[i] |= new_mask[i]; }
-
-    // shift the next blocks
-    for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
-    state->next[13] = Block::NONE;
-
-    // generate new random blocks if needed
-    if (state->next[7] == Block::NONE) { randomBlocks(state->next + 7, state->seed); }
-
+    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
     return true;
 }
 
@@ -707,31 +507,18 @@ bool rotate180(State* state) {
 }
 bool hold(State* state) {
     if (state->has_held) { return false; }
-
+    // reset state for new block
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
-
-    if (state->hold != Block::NONE) {
-        // push the held block to the block queue
+    // push the held block to the block queue if exists
+    if (state->hold != BlockType::NONE) {
         for (int i = 13; i > 0; i--) { state->next[i] = state->next[i - 1]; }
         state->next[0] = state->hold;
     }
     state->hold = state->current;
-
-    auto& block_data = blocks[state->current][state->orientation].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute block positions
-    uint32_t block_mask[4];
-    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
-
-    // remove block from board
-    for (int i = 0; i < 4; ++i) { rows[i] &= ~block_mask[i]; }
-
+    // place new block
+    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y + BOARD_TOP);
     generateBlock(state, true);
-
     state->has_held = true;
     return true;
 }
@@ -779,7 +566,7 @@ void toString(State* state, char* buf, size_t size) {
     thread_local static State st;
     if (size < sizeof(StringLayout)) return;
     // get shadow of current block
-    memcpy(st.board, state->board, sizeof(st.board));
+    st.board = state->board;
     st.current = state->current;
     st.orientation = state->orientation;
     st.x = state->x;
@@ -791,8 +578,8 @@ void toString(State* state, char* buf, size_t size) {
     memcpy(sl->next, next, sizeof(sl->next));
     memcpy(sl->hold, hold, sizeof(sl->hold));
     for (int i = 0; i < 21; i++) {
-        uint32_t row = state->board[i + BOARD_TOP];
-        uint32_t shd_row = st.board[i + BOARD_TOP];
+        uint32_t row = state->board.data[i + BOARD_TOP];
+        uint32_t shd_row = st.board.data[i + BOARD_TOP];
         for (uint32_t mask = 0b00000000000000000000000011000000u, j = 21;
                       mask < 0b00000100000000000000000000100000u; mask <<= 2, j -= 2) {
             switch ((shd_row & mask) >> (27 - j)) {
@@ -813,42 +600,18 @@ void toString(State* state, char* buf, size_t size) {
             }
         }
     }
-    for (int i = 0; i < 14; i++) { sl->next[7 + i * 3] = state->next[i]["?ZLOSIJT" + 1]; }
-    sl->hold[7] = state->hold[" ZLOSIJT" + 1];
+    for (int i = 0; i < 14; i++) { sl->next[7 + i * 3] = int8_t(state->next[i])["?ZLOSIJT" + 1]; }
+    sl->hold[7] = int8_t(state->hold)[" ZLOSIJT" + 1];
     sprintf(sl->line, "Line: [% 8d]", state->lines_cleared);
     buf[sizeof(StringLayout) - 1] = '\0';
 }
 
 void eraseCurrent(State* state) {
-    auto& block_data = blocks[state->current][state->orientation].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute block positions
-    uint32_t block_mask[4];
-    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
-
-    // remove block from board
-    for (int i = 0; i < 4; ++i) { rows[i] &= ~block_mask[i]; }
+    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y + BOARD_TOP);
 }
 bool pasteCurrent(State* state) {
-    auto& block_data = blocks[state->current][state->orientation].data;
-    const int x_offset = state->x << 1;
-    const int y_offset = state->y + BOARD_TOP;
-    uint32_t* rows = &state->board[y_offset];
-
-    // compute block positions
-    uint32_t block_mask[4];
-    for (int i = 0; i < 4; ++i) { block_mask[i] = block_data[i] >> x_offset; }
-
-    // test collision
-    for (int i = 0; i < 4; ++i) {
-        if (block_mask[i] & rows[i]) { return false; }
-    }
-
-    // place block on board
-    for (int i = 0; i < 4; ++i) { rows[i] |= block_mask[i]; }
-
+    auto& block = ops::getBlock(state->current, state->orientation);
+    if (!ops::canPlaceBlock(state->board, block, state->x, state->y + BOARD_TOP)) { return false; }
+    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
     return true;
 }
