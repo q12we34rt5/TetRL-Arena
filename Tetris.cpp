@@ -252,10 +252,10 @@ inline static std::pair<bool, bool> isTspin(State* state) {
     // |###|###|###|###|
     // |   |   |2  |  3|
     bool corners[4] = {
-        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y + BOARD_TOP),
-        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y + BOARD_TOP),
-        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y + BOARD_TOP + 2),
-        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y + BOARD_TOP + 2),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("B  ")}, state->x, state->y + 2),
+        !ops::canPlaceRows(state->board, Rows<1>{mkrow("  B")}, state->x, state->y + 2),
     };
     int count = 0;
     for (int i = 0; i < 4; ++i) { count += corners[i]; }
@@ -277,15 +277,15 @@ inline static std::pair<bool, bool> isTspin(State* state) {
 inline static bool isAllSpin(State* state) {
     if (state->current == BlockType::T || !state->was_last_rotation) { return false; }
     auto& block = ops::getBlock(state->current, state->orientation);
-    ops::removeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    ops::removeBlock(state->board, block, state->x, state->y);
     // check all-spin (piece cannot move left, right, up or down)
     bool collisions[4] = {
-        !ops::canPlaceBlock(state->board, block, state->x - 1, state->y + BOARD_TOP),     // left
-        !ops::canPlaceBlock(state->board, block, state->x + 1, state->y + BOARD_TOP),     // right
-        !ops::canPlaceBlock(state->board, block, state->x,     state->y + BOARD_TOP - 1), // up
-        !ops::canPlaceBlock(state->board, block, state->x,     state->y + BOARD_TOP + 1), // down
+        !ops::canPlaceBlock(state->board, block, state->x - 1, state->y), // left
+        !ops::canPlaceBlock(state->board, block, state->x + 1, state->y), // right
+        !ops::canPlaceBlock(state->board, block, state->x, state->y - 1), // up
+        !ops::canPlaceBlock(state->board, block, state->x, state->y + 1), // down
     };
-    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    ops::placeBlock(state->board, block, state->x, state->y);
     return collisions[0] && collisions[1] && collisions[2] && collisions[3];
 }
 inline static SpinType getSpinType(State* state) {
@@ -319,13 +319,13 @@ inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
     auto& block = ops::getBlock(state->current, state->orientation);
-    ops::removeBlock(state->board, block, state->x, state->y + BOARD_TOP);
-    bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y + BOARD_TOP);
+    ops::removeBlock(state->board, block, state->x, state->y);
+    bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y);
     if (can_place) {
         state->x = new_x;
         state->y = new_y;
     }
-    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    ops::placeBlock(state->board, block, state->x, state->y);
     return can_place;
 }
 inline static bool rotateBlock(State* state, Rotation rot) {
@@ -337,24 +337,24 @@ inline static bool rotateBlock(State* state, Rotation rot) {
     const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(rot)]) % 4;
     auto& old_block = ops::getBlock(state->current, state->orientation);
     auto& new_block = ops::getBlock(state->current, new_orientation);
-    ops::removeBlock(state->board, old_block, state->x, state->y + BOARD_TOP);
+    ops::removeBlock(state->board, old_block, state->x, state->y);
     // SRS kicks for CW/CCW/180
     auto& [kicks, len] = srs_table[int8_t(state->current)][state->orientation][uint8_t(rot)];
     // try SRS kicks
     for (int i = 0; i < len; ++i) {
         const int test_x = state->x + kicks[i].x;
         const int test_y = state->y - kicks[i].y;
-        if (ops::canPlaceBlock(state->board, new_block, test_x, test_y + BOARD_TOP)) {
+        if (ops::canPlaceBlock(state->board, new_block, test_x, test_y)) {
             // commit rotation + kick
             state->orientation = new_orientation;
             state->x = test_x;
             state->y = test_y;
-            ops::placeBlock(state->board, new_block, state->x, state->y + BOARD_TOP);
+            ops::placeBlock(state->board, new_block, state->x, state->y);
             state->srs_index = i;
             return true;
         }
     }
-    ops::placeBlock(state->board, old_block, state->x, state->y + BOARD_TOP);
+    ops::placeBlock(state->board, old_block, state->x, state->y);
     return false;
 }
 
@@ -404,7 +404,7 @@ bool generateBlock(State* state, bool called_by_hold) {
     // set new current block
     state->current = state->next[0];
     state->x = BOARD_LEFT + 3;
-    state->y = 0;
+    state->y = BOARD_TOP;
     state->orientation = 0;
     // shift the next blocks
     for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
@@ -413,13 +413,13 @@ bool generateBlock(State* state, bool called_by_hold) {
     if (state->next[7] == BlockType::NONE) { randomBlocks(state->next + 7, state->seed); }
     // spawn the new block
     auto& block = ops::getBlock(state->current, state->orientation);
-    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y);
     // Top out rule (https://tetris.wiki/Top_out)
     if (!can_place) {
         state->is_alive = false;
         return false;
     }
-    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    ops::placeBlock(state->board, block, state->x, state->y);
     return true;
 }
 
@@ -517,7 +517,7 @@ bool hold(State* state) {
     }
     state->hold = state->current;
     // place new block
-    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y + BOARD_TOP);
+    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y);
     generateBlock(state, true);
     state->has_held = true;
     return true;
@@ -607,11 +607,11 @@ void toString(State* state, char* buf, size_t size) {
 }
 
 void eraseCurrent(State* state) {
-    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y + BOARD_TOP);
+    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y);
 }
 bool pasteCurrent(State* state) {
     auto& block = ops::getBlock(state->current, state->orientation);
-    if (!ops::canPlaceBlock(state->board, block, state->x, state->y + BOARD_TOP)) { return false; }
-    ops::placeBlock(state->board, block, state->x, state->y + BOARD_TOP);
+    if (!ops::canPlaceBlock(state->board, block, state->x, state->y)) { return false; }
+    ops::placeBlock(state->board, block, state->x, state->y);
     return true;
 }
