@@ -375,7 +375,7 @@ void reset(State* state) {
     state->y = -1;
     state->lines_cleared = 0;
     state->srs_index = -1;
-    state->piece_count = 0;
+    state->piece_count = -1;
     state->was_last_rotation = false;
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
