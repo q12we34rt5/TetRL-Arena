@@ -377,6 +377,7 @@ void reset(State* state) {
     state->srs_index = -1;
     state->piece_count = -1;
     state->was_last_rotation = false;
+    state->spin_type = SpinType::NONE;
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
     state->combo_count = -1;
