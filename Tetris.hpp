@@ -186,7 +186,7 @@ struct State {
     int lines_cleared;
     uint32_t seed;
     int srs_index;
-    uint32_t piece_count;
+    int32_t piece_count;
     // TODO: remove was_last_rotation and use spin_type only
     bool was_last_rotation; // Indicates if the last successful action was a rotation
     SpinType spin_type;
