@@ -297,6 +297,13 @@ inline static SpinType getSpinType(State* state) {
     }
     return SpinType::NONE;
 }
+inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type) {
+    // current ruleset: tspin only
+    if (block_type != BlockType::T) { return false; }
+    if (spin_type == SpinType::SPIN || spin_type == SpinType::SPIN_MINI) { return true; }
+    return false;
+}
+
 inline static int clearLines(State* state) {
     constexpr uint32_t empty = mkrow("BBB..........BBB");
     constexpr uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
@@ -312,13 +319,6 @@ inline static int clearLines(State* state) {
         }
     }
     return count;
-}
-
-inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type) {
-    // current ruleset: tspin only
-    if (block_type != BlockType::T) { return false; }
-    if (spin_type == SpinType::SPIN || spin_type == SpinType::SPIN_MINI) { return true; }
-    return false;
 }
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
