@@ -237,11 +237,11 @@ inline static void randomBlocks(BlockType dest[], uint32_t& seed) {
     dest[6] = BlockType(ref.b6);
 }
 
-inline static void clean(State* state) {
+inline static void initializeBoard(Board& board) {
     using Initializer = IndexGenerator<Wrapper, BOARD_HEIGHT>::result::BoardInitializer<BOARD_HEIGHT, BOARD_PADDING,
         mkrow("BBB          BBB"),  // row data
         mkrow("BBBBBBBBBBBBBBBB")>; // wall data
-    state->board = Initializer::board;
+    board = Initializer::board;
 }
 
 // returns {is_tspin, is_mini_tspin}
@@ -367,7 +367,7 @@ void setSeed(State* state, uint32_t seed) {
 }
 
 void reset(State* state) {
-    clean(state);
+    initializeBoard(state->board);
     state->is_alive = true;
     randomBlocks(state->next, state->seed);
     randomBlocks(state->next + 7, state->seed);
