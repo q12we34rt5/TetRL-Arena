@@ -298,14 +298,18 @@ inline static SpinType getSpinType(State* state) {
     return SpinType::NONE;
 }
 inline static int clearLines(State* state) {
+    constexpr uint32_t empty = mkrow("BBB..........BBB");
     constexpr uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
     int count = 0;
-    for (int i = BOARD_BOTTOM; i >= BOARD_TOP - 3 /* TODO: Fix this */; i--) {
-        while ((state->board.data[i - count] & fullfilled) == fullfilled) {
-            state->board.data[i - count] = mkrow("BBB..........BBB");
+    for (int i = BOARD_BOTTOM; i >= 0; i--) {
+        while (i - count >= 0 && (state->board.data[i - count] & fullfilled) == fullfilled) {
             count++;
         }
-        state->board.data[i] = state->board.data[i - count];
+        if (i - count >= 0) {
+            state->board.data[i] = state->board.data[i - count];
+        } else {
+            state->board.data[i] = empty;
+        }
     }
     return count;
 }
