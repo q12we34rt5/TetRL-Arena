@@ -320,6 +320,50 @@ inline static int clearLines(State* state) {
     }
     return count;
 }
+inline static void lockCurrentBlockAndUpdateState(State* state) {
+    int cleared_lines = clearLines(state);
+    state->lines_cleared += cleared_lines;
+    state->piece_count++;
+    if (cleared_lines > 0) {
+        state->combo_count++;
+        state->back_to_back_count
+            = (isBackToBackSpinType(state->current, state->spin_type) || cleared_lines == 4) // T-spin or Tetris
+            ? state->back_to_back_count + 1
+            : -1;
+    } else {
+        state->combo_count = -1;
+    }
+}
+inline static BlockType fetchNextBlock(State* state) {
+    BlockType next_block = state->next[0];
+    // shift the next blocks
+    for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
+    state->next[13] = BlockType::NONE;
+    // generate new random blocks if needed
+    if (state->next[7] == BlockType::NONE) { randomBlocks(state->next + 7, state->seed); }
+    return next_block;
+}
+inline static bool newCurrentBlock(State* state, BlockType block_type) {
+    // set new current block
+    state->current = block_type;
+    state->orientation = 0;
+    state->x = BOARD_LEFT + 3;
+    state->y = BOARD_TOP;
+    // reset state for new block
+    state->srs_index = -1;
+    state->was_last_rotation = false;
+    // state->spin_type = SpinType::NONE; // postpone for tracking last spin type
+    // spawn the new block
+    auto& block = ops::getBlock(state->current, state->orientation);
+    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y);
+    // Top out rule (https://tetris.wiki/Top_out)
+    if (!can_place) {
+        state->is_alive = false;
+        return false;
+    }
+    ops::placeBlock(state->board, block, state->x, state->y);
+    return true;
+}
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
     auto& block = ops::getBlock(state->current, state->orientation);
@@ -379,53 +423,15 @@ void reset(State* state) {
     state->y = -1;
     state->lines_cleared = 0;
     state->srs_index = -1;
-    state->piece_count = -1;
+    state->piece_count = 0;
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
     state->combo_count = -1;
-}
-bool generateBlock(State* state, bool called_by_hold) {
-    if (!called_by_hold) {
-        int line_count = clearLines(state);
-        state->lines_cleared += line_count;
-        state->has_held = false;
-        state->piece_count++;
-        if (line_count > 0) {
-            state->combo_count++;
-            state->back_to_back_count
-                = (isBackToBackSpinType(state->current, state->spin_type) || line_count == 4) // T-spin or Tetris
-                ? state->back_to_back_count + 1
-                : -1;
-        } else {
-            state->combo_count = -1;
-        }
-    }
-    // reset state for new block
-    state->srs_index = -1;
-    state->was_last_rotation = false;
-    // state->spin_type = SpinType::NONE; // postpone for tracking last spin type
-    // set new current block
-    state->current = state->next[0];
-    state->x = BOARD_LEFT + 3;
-    state->y = BOARD_TOP;
-    state->orientation = 0;
-    // shift the next blocks
-    for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
-    state->next[13] = BlockType::NONE;
-    // generate new random blocks if needed
-    if (state->next[7] == BlockType::NONE) { randomBlocks(state->next + 7, state->seed); }
-    // spawn the new block
-    auto& block = ops::getBlock(state->current, state->orientation);
-    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y);
-    // Top out rule (https://tetris.wiki/Top_out)
-    if (!can_place) {
-        state->is_alive = false;
-        return false;
-    }
-    ops::placeBlock(state->board, block, state->x, state->y);
-    return true;
+    // spawn current block
+    BlockType next_block = fetchNextBlock(state);
+    newCurrentBlock(state, next_block);
 }
 
 bool moveLeft(State* state) {
@@ -484,7 +490,13 @@ bool hardDrop(State* state) {
     while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
     if (moved) { state->was_last_rotation = false; }
     state->spin_type = getSpinType(state); // TODO: remove redundant check
-    return generateBlock(state, false);
+    lockCurrentBlockAndUpdateState(state);
+    BlockType next_block = fetchNextBlock(state);
+    if (newCurrentBlock(state, next_block)) {
+        state->has_held = false;
+        return true;
+    }
+    return false;
 }
 bool rotateCounterclockwise(State* state) {
     bool moved = rotateBlock(state, Rotation::CCW);
@@ -515,16 +527,13 @@ bool hold(State* state) {
     // reset state for new block
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
-    // push the held block to the block queue if exists
-    if (state->hold != BlockType::NONE) {
-        for (int i = 13; i > 0; i--) { state->next[i] = state->next[i - 1]; }
-        state->next[0] = state->hold;
-    }
+    // hold current block
+    BlockType new_block = state->hold != BlockType::NONE ? state->hold : fetchNextBlock(state);
     state->hold = state->current;
+    state->has_held = true;
     // place new block
     ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y);
-    generateBlock(state, true);
-    state->has_held = true;
+    newCurrentBlock(state, new_block);
     return true;
 }
 

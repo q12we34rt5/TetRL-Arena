@@ -186,7 +186,7 @@ struct State {
     int lines_cleared;
     uint32_t seed;
     int srs_index;
-    int32_t piece_count;
+    uint32_t piece_count;
     // TODO: remove was_last_rotation and use spin_type only
     bool was_last_rotation; // Indicates if the last successful action was a rotation
     SpinType spin_type;
@@ -241,7 +241,6 @@ inline constexpr bool canPlaceBlock(const Board& board, const Block& block, int 
 void setSeed(State* state, uint32_t seed);
 
 void reset(State* state);
-bool generateBlock(State* state, bool called_by_hold = false);
 
 bool moveLeft(State* state);
 bool moveRight(State* state);
