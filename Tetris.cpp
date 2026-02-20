@@ -304,6 +304,101 @@ inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type
     return false;
 }
 
+int calculateAttack(const State* state, int cleared_lines) {
+    // TODO: implement different rulesets
+    return 0;
+}
+
+inline static void applyGarbage(Board& board, int lines, int hole_position) {
+    if (lines <= 0) { return; }
+    constexpr uint32_t garbage = mkrow("BBBGGGGGGGGGGBBB");
+    // shift up
+    for (int i = 0; i + lines <= BOARD_BOTTOM; ++i) {
+        board.data[i] = board.data[i + lines];
+    }
+    // add garbage rows
+    const uint32_t row = garbage & ~ops::shift(uint32_t(Cell::BLOCK), hole_position);
+    for (int i = 0; i < lines; ++i) {
+        board.data[BOARD_BOTTOM - i] = row;
+    }
+}
+
+inline static int processGarbageAndCounterAttack(State* state, int attack, int cleared_lines) {
+    int garbage_begin = 0, garbage_end = 0; // [begin, end) of pending garbage segments
+    // decrement delays and records the range of pending garbage
+    for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
+        if (state->garbage_queue[i] > 0) {
+            if (state->garbage_delay[i] > 0) { state->garbage_delay[i]--; }
+            garbage_end = i + 1; // update end to include this entry
+        } else {
+            break; // stop at first empty entry
+        }
+    }
+    // counter garbage with attack and update the range
+    int remaining_attack = attack;
+    for (int i = garbage_begin; remaining_attack > 0 && i < garbage_end; ++i) {
+        assert(state->garbage_queue[i] > 0);
+        if (state->garbage_queue[i] <= remaining_attack) { // fully countered
+            remaining_attack -= state->garbage_queue[i];
+            state->garbage_queue[i] = 0;
+            state->garbage_delay[i] = 0;
+            garbage_begin++; // track begin index
+        } else { // partially countered
+            state->garbage_queue[i] -= remaining_attack;
+            remaining_attack = 0;
+        }
+    }
+    // apply pending garbage with zero delay if no garbage blocking or no lines cleared
+    if (!state->garbage_blocking || cleared_lines == 0) {
+        uint16_t total_garbage_spawned = 0;
+        for (int i = garbage_begin; i < garbage_end; ++i) {
+            assert(state->garbage_queue[i] > 0);
+            if (state->garbage_delay[i] > 0) {
+                assert(garbage_begin == i);
+                break; // stop at first delayed garbage (assume delays are in order)
+            }
+            uint8_t lines_to_spawn = state->garbage_queue[i];
+            if (total_garbage_spawned + lines_to_spawn > state->max_garbage_spawn) {
+                lines_to_spawn = state->max_garbage_spawn - total_garbage_spawned;
+            }
+            assert(lines_to_spawn > 0);
+            total_garbage_spawned += lines_to_spawn;
+            // generate random hole position (assuming 10-wide playfield)
+            int hole_position = xorshf32(state->garbage_seed) % 10 + BOARD_LEFT;
+            // apply this segment of garbage
+            applyGarbage(state->board, lines_to_spawn, hole_position);
+            // update remaining garbage in this entry
+            state->garbage_queue[i] -= lines_to_spawn;
+            if (state->garbage_queue[i] == 0) {
+                state->garbage_delay[i] = 0;
+                garbage_begin++; // track begin index
+                assert(garbage_begin == i + 1);
+            } else {
+                assert(garbage_begin == i);
+                break; // stop if this entry is not fully applied (only happens when max_garbage_spawn is reached)
+            }
+        }
+    }
+    // shift remaining garbage entries to the front of the queue [garbage_begin, garbage_end) -> [0, garbage_end - garbage_begin)
+    if (garbage_begin > 0) {
+        int write_index = 0;
+        for (int read_index = garbage_begin; read_index < garbage_end; ++read_index) {
+            assert(state->garbage_queue[read_index] > 0);
+            if (write_index != read_index) {
+                state->garbage_queue[write_index] = state->garbage_queue[read_index];
+                state->garbage_delay[write_index] = state->garbage_delay[read_index];
+            }
+            write_index++;
+        }
+        // clear remaining entries after compacted data
+        for (int i = write_index; i < garbage_end; ++i) {
+            state->garbage_queue[i] = 0;
+            state->garbage_delay[i] = 0;
+        }
+    }
+    return remaining_attack;
+}
+
 inline static int clearLines(State* state) {
     constexpr uint32_t empty = mkrow("BBB..........BBB");
     constexpr uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
@@ -320,7 +415,8 @@ inline static int clearLines(State* state) {
     }
     return count;
 }
-inline static void lockCurrentBlockAndUpdateState(State* state) {
+inline static void processPiecePlacement(State* state) {
+    // clear lines and update state
     int cleared_lines = clearLines(state);
     state->lines_cleared += cleared_lines;
     state->piece_count++;
@@ -333,6 +429,13 @@ inline static void lockCurrentBlockAndUpdateState(State* state) {
     } else {
         state->combo_count = -1;
     }
+    // calculate attack and counter garbage
+    int attack = calculateAttack(state, cleared_lines);
+    int lines_sent = processGarbageAndCounterAttack(state, attack, cleared_lines);
+    state->attack = attack;
+    state->lines_sent = lines_sent;
+    state->total_attack += attack;
+    state->total_lines_sent += lines_sent;
 }
 inline static BlockType fetchNextBlock(State* state) {
     BlockType next_block = state->next[0];
@@ -429,12 +532,21 @@ void reset(State* state) {
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
     state->combo_count = -1;
+    // initialize garbage queues
+    std::fill(std::begin(state->garbage_queue), std::end(state->garbage_queue), 0);
+    std::fill(std::begin(state->garbage_delay), std::end(state->garbage_delay), 0);
+    state->attack = 0;
+    state->lines_sent = 0;
+    state->total_attack = 0;
+    state->total_lines_sent = 0;
     // spawn current block
     BlockType next_block = fetchNextBlock(state);
     newCurrentBlock(state, next_block);
 }
 
 bool moveLeft(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = moveBlock(state, state->x - 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
@@ -443,6 +555,8 @@ bool moveLeft(State* state) {
     return moved;
 }
 bool moveRight(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = moveBlock(state, state->x + 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
@@ -451,6 +565,8 @@ bool moveRight(State* state) {
     return moved;
 }
 bool moveLeftToWall(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = false;
     while (moveBlock(state, state->x - 1, state->y)) { moved = true; }
     if (moved) {
@@ -460,6 +576,8 @@ bool moveLeftToWall(State* state) {
     return moved;
 }
 bool moveRightToWall(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = false;
     while (moveBlock(state, state->x + 1, state->y)) { moved = true; }
     if (moved) {
@@ -469,6 +587,8 @@ bool moveRightToWall(State* state) {
     return moved;
 }
 bool softDrop(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = moveBlock(state, state->x, state->y + 1);
     if (moved) {
         state->was_last_rotation = false;
@@ -477,6 +597,8 @@ bool softDrop(State* state) {
     return moved;
 }
 bool softDropToFloor(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = false;
     while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
     if (moved) {
@@ -490,7 +612,7 @@ bool hardDrop(State* state) {
     while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
     if (moved) { state->was_last_rotation = false; }
     state->spin_type = getSpinType(state); // TODO: remove redundant check
-    lockCurrentBlockAndUpdateState(state);
+    processPiecePlacement(state);
     BlockType next_block = fetchNextBlock(state);
     if (newCurrentBlock(state, next_block)) {
         state->has_held = false;
@@ -499,6 +621,8 @@ bool hardDrop(State* state) {
     return false;
 }
 bool rotateCounterclockwise(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::CCW);
     if (moved) {
         state->was_last_rotation = true;
@@ -507,6 +631,8 @@ bool rotateCounterclockwise(State* state) {
     return moved;
 }
 bool rotateClockwise(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::CW);
     if (moved) {
         state->was_last_rotation = true;
@@ -515,6 +641,8 @@ bool rotateClockwise(State* state) {
     return moved;
 }
 bool rotate180(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::HALF);
     if (moved) {
         state->was_last_rotation = true;
@@ -523,8 +651,10 @@ bool rotate180(State* state) {
     return moved;
 }
 bool hold(State* state) {
+    state->attack = 0;
+    state->lines_sent = 0;
     if (state->has_held) { return false; }
-    // reset state for new block
+    // reset state for new block (TODO: remove redundancy with newCurrentBlock)
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
     // hold current block
@@ -537,7 +667,24 @@ bool hold(State* state) {
     return true;
 }
 
+bool addGarbage(State* state, uint8_t lines, uint8_t delay) {
+    if (lines == 0) { return false; }
+    for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
+        if (state->garbage_queue[i] == 0) {
+            assert(state->garbage_delay[i] == 0);
+            state->garbage_queue[i] = lines;
+            state->garbage_delay[i] = delay;
+            return true;
+        }
+    }
+    // TODO: garbage queue full, maybe append to the last entry?
+    return false;
+}
+
 void toString(State* state, char* buf, size_t size) {
+    // TODO:
+    //   - refactor
+    //   - add garbage queue info
     struct StringLayout {
         char board[22][25];
         // "Next: [Z, L, O, S, I, J, T, Z, L, O, S, I, J, T]"
