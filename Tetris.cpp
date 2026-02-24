@@ -304,9 +304,68 @@ inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type
     return false;
 }
 
-int calculateAttack(const State* state, int cleared_lines) {
-    // TODO: implement different rulesets
-    return 0;
+inline static int calculateAttack(const State* state, int cleared_lines) {
+    // Jstris attack table (https://jstris.jezevec10.com/guide#attack-and-combo-table, https://tetris.wiki/Jstris#Details)
+    // | Attack Type        | Lines Sent || Combo # | Lines Sent |
+    // | 0 lines            |          0 ||       0 |          0 |
+    // | 1 line  (single)   |          0 ||       1 |          0 |
+    // | 2 lines (double)   |          1 ||       2 |          1 |
+    // | 3 lines (triple)   |          2 ||       3 |          1 |
+    // | 4 lines            |          4 ||       4 |          1 |
+    // | T-spin Double      |          4 ||       5 |          2 |
+    // | T-spin Triple      |          6 ||       6 |          2 |
+    // | T-spin Single      |          2 ||       7 |          3 |
+    // | T-spin Mini Single |          0 ||       8 |          3 |
+    // | Perfect Clear      |         10 ||       9 |          4 |
+    // | Back-to-Back       |         +1 ||      10 |          4 |
+    // |                    |            ||      11 |          4 |
+    // |                    |            ||     12+ |          5 |
+    if (cleared_lines == 0) { return 0; }
+    bool is_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN;
+    bool is_mini_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN_MINI;
+    bool is_b2b = state->back_to_back_count > 0;
+    // --- Base attack ---
+    int base = 0;
+    if (is_tspin) {
+        // T-spin Single = 2, Double = 4, Triple = 6
+        base = cleared_lines << 1;
+    } else if (is_mini_tspin) {
+        // T-spin Mini Single = 0, Double = 4
+        base = (cleared_lines == 2) << 2;
+    } else {
+        // normal clears
+        switch (cleared_lines) {
+        case 1: base = 0; break;
+        case 2: base = 1; break;
+        case 3: base = 2; break;
+        case 4: base = 4; break;
+        default: assert(false); break;
+        }
+    }
+    // --- Perfect Clear ---
+    // board is already cleared at this point; check if all playfield rows are empty
+    constexpr uint32_t playfield_mask = mkrow("...GGGGGGGGGG...");
+    bool is_perfect_clear = true;
+    for (int i = 0; i <= BOARD_BOTTOM; ++i) {
+        if ((state->board.data[i] & playfield_mask) != 0) {
+            is_perfect_clear = false;
+            break;
+        }
+    }
+    if (is_perfect_clear) { base = 10; }
+    // --- Back-to-Back bonus ---
+    // B2B applies to Tetris and T-spins, but NOT Mini T-spin Singles
+    if (is_b2b && (cleared_lines >= 4 || is_tspin)) { base += 1; }
+    // --- Combo bonus ---
+    // combo_count: -1 = no combo, 0 = first clear (combo 0), 1 = second consecutive (combo 1), ...
+    constexpr int combo_table[] = { 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5 };
+    constexpr int combo_table_size = sizeof(combo_table) / sizeof(combo_table[0]);
+    if (state->combo_count >= 0) {
+        int combo_index = state->combo_count;
+        if (combo_index >= combo_table_size) { combo_index = combo_table_size - 1; }
+        base += combo_table[combo_index];
+    }
+    return base;
 }
 
 inline static void applyGarbage(Board& board, int lines, int hole_position) {
