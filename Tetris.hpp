@@ -241,6 +241,19 @@ inline constexpr Rows<N> shift(const Rows<N>& rows, int dx) {
     return result;
 }
 
+inline constexpr void setCell(uint32_t& row, int x, Cell cell) {
+    const int x_offset = x << 1;
+    row = (row & ~(uint32_t(Cell::BLOCK) >> x_offset)) | uint32_t(cell) >> x_offset;
+}
+template<std::size_t N>
+inline constexpr void setCell(Rows<N>& rows, int x, int y, Cell cell) { setCell(rows.data[y], x, cell); }
+inline constexpr Cell getCell(uint32_t row, int x) {
+    const int x_offset = x << 1;
+    return Cell(row << x_offset & uint32_t(Cell::BLOCK));
+}
+template<std::size_t N>
+inline constexpr Cell getCell(const Rows<N>& rows, int x, int y) { return getCell(rows.data[y], x); }
+
 template<std::size_t N>
 inline constexpr void placeRows(Board& board, const Rows<N>& rows, int x, int y) {
     const int x_offset = x << 1;

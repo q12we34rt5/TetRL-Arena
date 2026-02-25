@@ -741,89 +741,119 @@ bool addGarbage(State* state, uint8_t lines, uint8_t delay) {
 }
 
 void toString(State* state, char* buf, size_t size) {
-    // TODO:
-    //   - refactor
-    //   - add garbage queue info
+    constexpr int STRING_BOARD_WIDTH = 22;
+    constexpr int STRING_BOARD_HEIGHT = 22;
+    constexpr int STRING_BOARD_LEFT = 6;
+    constexpr int STRING_BOARD_TOP = 0;
+    constexpr int STRING_HOLD_X = 1;
+    constexpr int STRING_HOLD_Y = 1;
+    constexpr int STRING_NEXT_X = 17;
+    constexpr int STRING_NEXT_Y = 1;
+    constexpr int STRING_NEXT_SPACING = 3;
     struct StringLayout {
-        char board[22][25];
-        // "Next: [Z, L, O, S, I, J, T, Z, L, O, S, I, J, T]"
-        char next[49];
-        // "Hold: [Z]"
-        char hold[10];
-        // "Line: [    % 8d]"
-        char line[17];
+        char board[STRING_BOARD_HEIGHT][STRING_BOARD_WIDTH * 2 + 1]; // +1 for newline
     };
-    static const char board[22][25] = {
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','\n'},
-        {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','\n'},
+    struct StringCell {
+        char left, right;
     };
-    static const char next[] = {
-        'N','e','x','t',':',' ','[',
-        '?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',',',' ',
-        '?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',',',' ','?',']','\n'
+    constexpr char initial_board[] =
+        "XXXXXXXXXXXX                    XXXXXXXXXXXX\n"
+        "XX        XX                    XX        XX\n"
+        "XX        XX                    XX        XX\n"
+        "XXXXXXXXXXXX                    XXXXXXXXXXXX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XXXXXXXXXXXX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XXXXXXXXXXXX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XXXXXXXXXXXX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XX        XX\n"
+        "          XX                    XXXXXXXXXXXX\n"
+        "          XX                    XX          \n"
+        "          XX                    XX          \n"
+        "          XX                    XX          \n"
+        "          XX                    XX          \n"
+        "          XX                    XX          \n"
+        "          XXXXXXXXXXXXXXXXXXXXXXXX          \0";
+    // some blocks are shifted half a cell to the right in the string representation to look better (since the string cells are twice as wide as the board cells)
+    static constexpr bool half_shift[] = {
+        // Z,    L,     O,    S,     I,    J,    T
+        true, true, false, true, false, true, true
     };
-    static const char hold[] = {'H','o','l','d',':',' ','[','Z',']','\n'};
-    thread_local static State st;
-    if (size < sizeof(StringLayout)) return;
-    // get shadow of current block
-    st.board = state->board;
-    st.current = state->current;
-    st.orientation = state->orientation;
-    st.x = state->x;
-    st.y = state->y;
-    while (softDrop(&st));
-    // print state to buf
-    StringLayout* sl = reinterpret_cast<StringLayout*>(buf);
-    memcpy(sl->board, board, sizeof(sl->board));
-    memcpy(sl->next, next, sizeof(sl->next));
-    memcpy(sl->hold, hold, sizeof(sl->hold));
-    for (int i = 0; i < 21; i++) {
-        uint32_t row = state->board.data[i + BOARD_TOP];
-        uint32_t shd_row = st.board.data[i + BOARD_TOP];
-        for (uint32_t mask = 0b00000000000000000000000011000000u, j = 21;
-                      mask < 0b00000100000000000000000000100000u; mask <<= 2, j -= 2) {
-            switch ((shd_row & mask) >> (27 - j)) {
-            case 0b10:
-            case 0b11:
-                sl->board[i][j] = ':';
-                sl->board[i][j - 1] = ':';
-            }
-            switch ((row & mask) >> (27 - j)) {
-            case 0b01:
-                sl->board[i][j] = sl->board[i][j - 1] = '#';
-                break;
-            case 0b10:
-            case 0b11:
-                sl->board[i][j] = ']';
-                sl->board[i][j - 1] = '[';
-                break;
+    // helper functions for drawing the board and blocks into the string layout
+    static constexpr auto drawStringCell = [](StringLayout& sl, int string_x, int string_y, StringCell string_cell, bool half_shift = false) {
+        if (string_x >= 0 && string_x < STRING_BOARD_WIDTH && string_y >= 0 && string_y < STRING_BOARD_HEIGHT) {
+            auto target_cell = &sl.board[string_y][string_x * 2 + half_shift];
+            target_cell[0] = string_cell.left;
+            target_cell[1] = string_cell.right;
+        }
+    };
+    static constexpr auto drawBlock = [](StringLayout& sl, int string_x, int string_y, BlockType block_type, uint8_t orientation, bool half_shift = false, StringCell string_cell = {'[', ']'}) {
+        auto& block = ops::getBlock(block_type, orientation);
+        // put 4x4 block shape into the string layout
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                if (ops::getCell(block, j, i) == Cell::EMPTY) { continue; }
+                drawStringCell(sl, string_x + j, string_y + i, string_cell, half_shift);
             }
         }
+    };
+    static constexpr auto setHold = [](StringLayout& sl, BlockType hold) {
+        if (hold == BlockType::NONE) { return; }
+        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[int8_t(hold)]);
+    };
+    static constexpr auto setNext = [](StringLayout& sl, const BlockType* next) {
+        for (int i = 0; i < 5; ++i) {
+            if (next[i] == BlockType::NONE) { break; }
+            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[int8_t(next[i])]);
+        }
+    };
+    // sanity check for buffer size
+    if (size < sizeof(StringLayout)) { return; }
+    // view buf as StringLayout
+    StringLayout* sl = reinterpret_cast<StringLayout*>(buf);
+    // calculate shadow position
+    auto& block = ops::getBlock(state->current, state->orientation);
+    ops::removeBlock(state->board, block, state->x, state->y);
+    int shadow_y = state->y;
+    while (ops::canPlaceBlock(state->board, block, state->x, shadow_y + 1)) {
+        shadow_y++;
     }
-    for (int i = 0; i < 14; i++) { sl->next[7 + i * 3] = int8_t(state->next[i])["?ZLOSIJT" + 1]; }
-    sl->hold[7] = int8_t(state->hold)[" ZLOSIJT" + 1];
-    sprintf(sl->line, "Line: [% 8d]", state->lines_cleared);
-    buf[sizeof(StringLayout) - 1] = '\0';
+    ops::placeBlock(state->board, block, state->x, state->y);
+    // copy the initial board layout
+    memcpy(sl->board, initial_board, sizeof(sl->board));
+    // draw state to buf
+    for (int y = BOARD_TOP; y <= BOARD_BOTTOM; ++y) {
+        for (int x = BOARD_LEFT; x < BOARD_LEFT + 10; ++x) {
+            Cell cell = ops::getCell(state->board, x, y);
+            StringCell string_cell;
+            switch (cell) {
+            case Cell::EMPTY:   string_cell = {' ', ' '}; break;
+            case Cell::GARBAGE: string_cell = {'#', '#'}; break;
+            case Cell::SHADOW:  string_cell = {':', ':'}; break;
+            case Cell::BLOCK:   string_cell = {'[', ']'}; break;
+            default: assert(false); break;
+            }
+            int string_x = x - BOARD_LEFT + STRING_BOARD_LEFT;
+            int string_y = y - BOARD_TOP + STRING_BOARD_TOP;
+            drawStringCell(*sl, string_x, string_y, string_cell);
+        }
+    }
+    // draw shadow block
+    int shadow_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
+    int shadow_string_y = shadow_y - BOARD_TOP + STRING_BOARD_TOP;
+    drawBlock(*sl, shadow_string_x, shadow_string_y, state->current, state->orientation, false, {':', ':'});
+    // draw current block (after shadow to overwrite shadow cells if overlapping)
+    int current_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
+    int current_string_y = state->y - BOARD_TOP + STRING_BOARD_TOP;
+    drawBlock(*sl, current_string_x, current_string_y, state->current, state->orientation);
+    // draw hold and next blocks
+    setHold(*sl, state->hold);
+    setNext(*sl, state->next);
 }
 
 void eraseCurrent(State* state) {
