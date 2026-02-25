@@ -741,15 +741,20 @@ bool addGarbage(State* state, uint8_t lines, uint8_t delay) {
 }
 
 void toString(State* state, char* buf, size_t size) {
-    constexpr int STRING_BOARD_WIDTH = 22;
+    // coordinates below: x is in units of 2 chars (each cell = 2 characters wide)
+    constexpr int STRING_BOARD_WIDTH = 23;
     constexpr int STRING_BOARD_HEIGHT = 22;
-    constexpr int STRING_BOARD_LEFT = 6;
+    constexpr int STRING_BOARD_LEFT = 7;
     constexpr int STRING_BOARD_TOP = 0;
     constexpr int STRING_HOLD_X = 1;
     constexpr int STRING_HOLD_Y = 1;
-    constexpr int STRING_NEXT_X = 17;
+    constexpr int STRING_NEXT_X = 18;
     constexpr int STRING_NEXT_Y = 1;
     constexpr int STRING_NEXT_SPACING = 3;
+    // garbage coordinates: x is in units of 1 char
+    constexpr int STRING_GARBAGE_TOP = 0;
+    constexpr int STRING_GARBAGE_BOTTOM = 20;
+    constexpr int STRING_GARBAGE_LEFT = 12;
     struct StringLayout {
         char board[STRING_BOARD_HEIGHT][STRING_BOARD_WIDTH * 2 + 1]; // +1 for newline
     };
@@ -757,28 +762,31 @@ void toString(State* state, char* buf, size_t size) {
         char left, right;
     };
     constexpr char initial_board[] =
-        "XXXXXXXXXXXX                    XXXXXXXXXXXX\n"
-        "XX        XX                    XX        XX\n"
-        "XX        XX                    XX        XX\n"
-        "XXXXXXXXXXXX                    XXXXXXXXXXXX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XXXXXXXXXXXX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XXXXXXXXXXXX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XXXXXXXXXXXX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XX        XX\n"
-        "          XX                    XXXXXXXXXXXX\n"
-        "          XX                    XX          \n"
-        "          XX                    XX          \n"
-        "          XX                    XX          \n"
-        "          XX                    XX          \n"
-        "          XX                    XX          \n"
-        "          XXXXXXXXXXXXXXXXXXXXXXXX          \0";
+        "XXXXXXXXXXXX X                    XXXXXXXXXXXX\n"
+        "XX        XX X                    XX        XX\n"
+        "XX        XX X                    XX        XX\n"
+        "XXXXXXXXXXXX X                    XXXXXXXXXXXX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XXXXXXXXXXXX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XXXXXXXXXXXX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XXXXXXXXXXXX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XX        XX\n"
+        "          XX X                    XXXXXXXXXXXX\n"
+        "          XX X                    XX          \n"
+        "          XX X                    XX          \n"
+        "          XX X                    XX          \n"
+        "          XX X                    XX          \n"
+        "          XX X                    XX          \n"
+        "          XXXXXXXXXXXXXXXXXXXXXXXXXX          \0";
+    // symbols for representing pending garbage with different delays (0-9, A-Z, then *)
+    static constexpr char pending_garbage_symbols[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ*";
+    static constexpr int pending_garbage_symbol_size = sizeof(pending_garbage_symbols) - 1; // exclude null terminator
     // some blocks are shifted half a cell to the right in the string representation to look better (since the string cells are twice as wide as the board cells)
     static constexpr bool half_shift[] = {
         // Z,    L,     O,    S,     I,    J,    T
@@ -810,6 +818,18 @@ void toString(State* state, char* buf, size_t size) {
         for (int i = 0; i < 5; ++i) {
             if (next[i] == BlockType::NONE) { break; }
             drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[int8_t(next[i])]);
+        }
+    };
+    static constexpr auto drawPendingGarbageQueue = [](StringLayout& sl, uint8_t garbage_queue[], uint8_t garbage_delay[]) {
+        int string_y = STRING_GARBAGE_BOTTOM;
+        for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
+            if (garbage_queue[i] == 0 || string_y < STRING_GARBAGE_TOP) { break; }
+            int length = garbage_queue[i];
+            int delay = garbage_delay[i];
+            char symbol = delay <= pending_garbage_symbol_size ? pending_garbage_symbols[delay] : pending_garbage_symbols[pending_garbage_symbol_size - 1];
+            for (; string_y >= STRING_GARBAGE_TOP && length > 0; --string_y, --length) {
+                sl.board[string_y][STRING_GARBAGE_LEFT] = symbol;
+            }
         }
     };
     // sanity check for buffer size
@@ -854,6 +874,8 @@ void toString(State* state, char* buf, size_t size) {
     // draw hold and next blocks
     setHold(*sl, state->hold);
     setNext(*sl, state->next);
+    // draw pending garbage queue
+    drawPendingGarbageQueue(*sl, state->garbage_queue, state->garbage_delay);
 }
 
 void eraseCurrent(State* state) {
