@@ -878,12 +878,6 @@ void toString(State* state, char* buf, size_t size) {
     drawPendingGarbageQueue(*sl, state->garbage_queue, state->garbage_delay);
 }
 
-void eraseCurrent(State* state) {
-    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y);
-}
-bool pasteCurrent(State* state) {
-    auto& block = ops::getBlock(state->current, state->orientation);
-    if (!ops::canPlaceBlock(state->board, block, state->x, state->y)) { return false; }
-    ops::placeBlock(state->board, block, state->x, state->y);
-    return true;
-}
+void placeCurrentBlock(State* state) { ops::placeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
+void removeCurrentBlock(State* state) { ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
+bool canPlaceCurrentBlock(State* state) { return ops::canPlaceBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }

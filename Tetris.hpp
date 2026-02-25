@@ -300,5 +300,6 @@ bool addGarbage(State* state, uint8_t lines, uint8_t delay);
 
 void toString(State* state, char* buf, size_t size);
 
-void eraseCurrent(State* state);
-bool pasteCurrent(State* state);
+void placeCurrentBlock(State* state);
+void removeCurrentBlock(State* state);
+bool canPlaceCurrentBlock(State* state);
