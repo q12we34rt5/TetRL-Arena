@@ -604,10 +604,15 @@ void reset(State* state) {
     newCurrentBlock(state, next_block);
 }
 
-bool moveLeft(State* state) {
+// reset output fields from the last piece placement
+inline static void clearLastPlacementResult(State* state) {
     state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
+}
+
+bool moveLeft(State* state) {
+    clearLastPlacementResult(state);
     bool moved = moveBlock(state, state->x - 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
@@ -616,9 +621,7 @@ bool moveLeft(State* state) {
     return moved;
 }
 bool moveRight(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = moveBlock(state, state->x + 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
@@ -627,9 +630,7 @@ bool moveRight(State* state) {
     return moved;
 }
 bool moveLeftToWall(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = false;
     while (moveBlock(state, state->x - 1, state->y)) { moved = true; }
     if (moved) {
@@ -639,9 +640,7 @@ bool moveLeftToWall(State* state) {
     return moved;
 }
 bool moveRightToWall(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = false;
     while (moveBlock(state, state->x + 1, state->y)) { moved = true; }
     if (moved) {
@@ -651,9 +650,7 @@ bool moveRightToWall(State* state) {
     return moved;
 }
 bool softDrop(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = moveBlock(state, state->x, state->y + 1);
     if (moved) {
         state->was_last_rotation = false;
@@ -662,9 +659,7 @@ bool softDrop(State* state) {
     return moved;
 }
 bool softDropToFloor(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = false;
     while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
     if (moved) {
@@ -687,9 +682,7 @@ bool hardDrop(State* state) {
     return false;
 }
 bool rotateCounterclockwise(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = rotateBlock(state, Rotation::CCW);
     if (moved) {
         state->was_last_rotation = true;
@@ -698,9 +691,7 @@ bool rotateCounterclockwise(State* state) {
     return moved;
 }
 bool rotateClockwise(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = rotateBlock(state, Rotation::CW);
     if (moved) {
         state->was_last_rotation = true;
@@ -709,9 +700,7 @@ bool rotateClockwise(State* state) {
     return moved;
 }
 bool rotate180(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     bool moved = rotateBlock(state, Rotation::HALF);
     if (moved) {
         state->was_last_rotation = true;
@@ -720,9 +709,7 @@ bool rotate180(State* state) {
     return moved;
 }
 bool hold(State* state) {
-    state->perfect_clear = false;
-    state->attack = 0;
-    state->lines_sent = 0;
+    clearLastPlacementResult(state);
     if (state->has_held) { return false; }
     // reset state for new block (TODO: remove redundancy with newCurrentBlock)
     state->was_last_rotation = false;
