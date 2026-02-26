@@ -343,16 +343,7 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
         }
     }
     // --- Perfect Clear ---
-    // board is already cleared at this point; check if all playfield rows are empty
-    constexpr uint32_t playfield_mask = mkrow("...GGGGGGGGGG...");
-    bool is_perfect_clear = true;
-    for (int i = 0; i <= BOARD_BOTTOM; ++i) {
-        if ((state->board.data[i] & playfield_mask) != 0) {
-            is_perfect_clear = false;
-            break;
-        }
-    }
-    if (is_perfect_clear) { base = 10; }
+    if (state->perfect_clear) { base = 10; }
     // --- Back-to-Back bonus ---
     // B2B applies to Tetris and T-spins, but NOT Mini T-spin Singles
     if (is_b2b && (cleared_lines >= 4 || is_tspin)) { base += 1; }
@@ -480,6 +471,15 @@ inline static void processPiecePlacement(State* state) {
     state->lines_cleared += cleared_lines;
     state->piece_count++;
     if (cleared_lines > 0) {
+        // check perfect clear
+        state->perfect_clear = true;
+        for (int i = 0; i <= BOARD_BOTTOM; ++i) {
+            if (state->board.data[i] & mkrow("...GGGGGGGGGG...")) {
+                state->perfect_clear = false;
+                break;
+            }
+        }
+        // update combo and back-to-back counts
         state->combo_count++;
         state->back_to_back_count
             = (isBackToBackSpinType(state->current, state->spin_type) || cleared_lines == 4) // T-spin or Tetris
@@ -588,6 +588,7 @@ void reset(State* state) {
     state->piece_count = 0;
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
+    state->perfect_clear = false;
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
     state->combo_count = -1;
@@ -604,6 +605,7 @@ void reset(State* state) {
 }
 
 bool moveLeft(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = moveBlock(state, state->x - 1, state->y);
@@ -614,6 +616,7 @@ bool moveLeft(State* state) {
     return moved;
 }
 bool moveRight(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = moveBlock(state, state->x + 1, state->y);
@@ -624,6 +627,7 @@ bool moveRight(State* state) {
     return moved;
 }
 bool moveLeftToWall(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = false;
@@ -635,6 +639,7 @@ bool moveLeftToWall(State* state) {
     return moved;
 }
 bool moveRightToWall(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = false;
@@ -646,6 +651,7 @@ bool moveRightToWall(State* state) {
     return moved;
 }
 bool softDrop(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = moveBlock(state, state->x, state->y + 1);
@@ -656,6 +662,7 @@ bool softDrop(State* state) {
     return moved;
 }
 bool softDropToFloor(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = false;
@@ -680,6 +687,7 @@ bool hardDrop(State* state) {
     return false;
 }
 bool rotateCounterclockwise(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::CCW);
@@ -690,6 +698,7 @@ bool rotateCounterclockwise(State* state) {
     return moved;
 }
 bool rotateClockwise(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::CW);
@@ -700,6 +709,7 @@ bool rotateClockwise(State* state) {
     return moved;
 }
 bool rotate180(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     bool moved = rotateBlock(state, Rotation::HALF);
@@ -710,6 +720,7 @@ bool rotate180(State* state) {
     return moved;
 }
 bool hold(State* state) {
+    state->perfect_clear = false;
     state->attack = 0;
     state->lines_sent = 0;
     if (state->has_held) { return false; }

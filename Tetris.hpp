@@ -191,7 +191,8 @@ struct State {
     uint32_t piece_count;
     // TODO: remove was_last_rotation and use spin_type only
     bool was_last_rotation; // Indicates if the last successful action was a rotation
-    SpinType spin_type;
+    SpinType spin_type;     // Type of spin (NONE, SPIN, SPIN_MINI) for the last piece placement
+    bool perfect_clear;     // Last piece placement resulted in a perfect clear
     int32_t back_to_back_count;
     int32_t combo_count;
     // TODO: consolidate attack and lines_sent reset logic (currently reset in every move and rotation function)
