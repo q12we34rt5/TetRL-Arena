@@ -280,7 +280,7 @@ inline constexpr bool canPlaceBlock(const Board& board, const Block& block, int 
 
 } // namespace ops
 
-void setSeed(State* state, uint32_t seed);
+void setSeed(State* state, uint32_t seed, uint32_t garbage_seed);
 
 void reset(State* state);
 

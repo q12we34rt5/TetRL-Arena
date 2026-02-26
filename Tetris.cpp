@@ -568,8 +568,9 @@ inline static bool rotateBlock(State* state, Rotation rot) {
     return false;
 }
 
-void setSeed(State* state, uint32_t seed) {
+void setSeed(State* state, uint32_t seed, uint32_t garbage_seed) {
     state->seed = seed;
+    state->garbage_seed = garbage_seed;
 }
 
 void reset(State* state) {
