@@ -25,7 +25,7 @@ struct Wrapper {
 };
 template<int ...args>
 template<int height, int padding, uint32_t row, uint32_t wall>
-const Rows<height> Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::board = {
+const Rows<height> Wrapper<args...>::BoardInitializer<height, padding, row, wall>::board = {
     Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
 };
 
