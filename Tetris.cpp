@@ -277,7 +277,6 @@ inline static std::pair<bool, bool> isTspin(State* state) {
 inline static bool isAllSpin(State* state) {
     if (state->current == BlockType::T || !state->was_last_rotation) { return false; }
     auto& block = ops::getBlock(state->current, state->orientation);
-    ops::removeBlock(state->board, block, state->x, state->y);
     // check all-spin (piece cannot move left, right, up or down)
     bool collisions[4] = {
         !ops::canPlaceBlock(state->board, block, state->x - 1, state->y), // left
@@ -285,7 +284,6 @@ inline static bool isAllSpin(State* state) {
         !ops::canPlaceBlock(state->board, block, state->x, state->y - 1), // up
         !ops::canPlaceBlock(state->board, block, state->x, state->y + 1), // down
     };
-    ops::placeBlock(state->board, block, state->x, state->y);
     return collisions[0] && collisions[1] && collisions[2] && collisions[3];
 }
 inline static SpinType getSpinType(State* state) {
@@ -466,6 +464,9 @@ inline static int clearLines(State* state) {
     return count;
 }
 inline static void processPiecePlacement(State* state) {
+    // place the current block on the board
+    auto& block = ops::getBlock(state->current, state->orientation);
+    ops::placeBlock(state->board, block, state->x, state->y);
     // clear lines and update state
     int cleared_lines = clearLines(state);
     state->lines_cleared += cleared_lines;
@@ -523,19 +524,16 @@ inline static bool newCurrentBlock(State* state, BlockType block_type) {
         state->is_alive = false;
         return false;
     }
-    ops::placeBlock(state->board, block, state->x, state->y);
     return true;
 }
 
 inline static bool moveBlock(State* state, int new_x, int new_y) {
     auto& block = ops::getBlock(state->current, state->orientation);
-    ops::removeBlock(state->board, block, state->x, state->y);
     bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y);
     if (can_place) {
         state->x = new_x;
         state->y = new_y;
     }
-    ops::placeBlock(state->board, block, state->x, state->y);
     return can_place;
 }
 inline static bool rotateBlock(State* state, Rotation rot) {
@@ -547,7 +545,6 @@ inline static bool rotateBlock(State* state, Rotation rot) {
     const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(rot)]) % 4;
     auto& old_block = ops::getBlock(state->current, state->orientation);
     auto& new_block = ops::getBlock(state->current, new_orientation);
-    ops::removeBlock(state->board, old_block, state->x, state->y);
     // SRS kicks for CW/CCW/180
     auto& [kicks, len] = srs_table[int8_t(state->current)][state->orientation][uint8_t(rot)];
     // try SRS kicks
@@ -559,12 +556,10 @@ inline static bool rotateBlock(State* state, Rotation rot) {
             state->orientation = new_orientation;
             state->x = test_x;
             state->y = test_y;
-            ops::placeBlock(state->board, new_block, state->x, state->y);
             state->srs_index = i;
             return true;
         }
     }
-    ops::placeBlock(state->board, old_block, state->x, state->y);
     return false;
 }
 
@@ -719,8 +714,7 @@ bool hold(State* state) {
     BlockType new_block = state->hold != BlockType::NONE ? state->hold : fetchNextBlock(state);
     state->hold = state->current;
     state->has_held = true;
-    // place new block
-    ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y);
+    // setup new current block
     newCurrentBlock(state, new_block);
     return true;
 }
@@ -837,12 +831,10 @@ void toString(State* state, char* buf, size_t size) {
     StringLayout* sl = reinterpret_cast<StringLayout*>(buf);
     // calculate shadow position
     auto& block = ops::getBlock(state->current, state->orientation);
-    ops::removeBlock(state->board, block, state->x, state->y);
     int shadow_y = state->y;
     while (ops::canPlaceBlock(state->board, block, state->x, shadow_y + 1)) {
         shadow_y++;
     }
-    ops::placeBlock(state->board, block, state->x, state->y);
     // copy the initial board layout
     memcpy(sl->board, initial_board, sizeof(sl->board));
     // draw state to buf
@@ -866,7 +858,7 @@ void toString(State* state, char* buf, size_t size) {
     int shadow_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
     int shadow_string_y = shadow_y - BOARD_TOP + STRING_BOARD_TOP;
     drawBlock(*sl, shadow_string_x, shadow_string_y, state->current, state->orientation, false, {':', ':'});
-    // draw current block (after shadow to overwrite shadow cells if overlapping)
+    // draw current block
     int current_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
     int current_string_y = state->y - BOARD_TOP + STRING_BOARD_TOP;
     drawBlock(*sl, current_string_x, current_string_y, state->current, state->orientation);
