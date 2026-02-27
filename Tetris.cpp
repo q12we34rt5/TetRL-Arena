@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <utility>
+#include <limits>
 
 #include <cassert>
 
@@ -14,22 +15,22 @@ template<template<int...> class Container, int ...args>
 struct IndexGenerator<Container, 0, args...> { using result = Container<args...>; };
 template<int ...args>
 struct Wrapper {
-    template<int height, int padding, uint32_t row, uint32_t wall>
+    template<int height, int padding, std::uint32_t row, std::uint32_t wall>
     struct BoardInitializer {
         template<bool condition, typename x> struct If {};
-        template<typename x> struct If<true, x> { static constexpr uint32_t value = wall; };
-        template<typename x> struct If<false, x> { static constexpr uint32_t value = row; };
+        template<typename x> struct If<true, x> { static constexpr std::uint32_t value = wall; };
+        template<typename x> struct If<false, x> { static constexpr std::uint32_t value = row; };
 
         static const Rows<height> board;
     };
 };
 template<int ...args>
-template<int height, int padding, uint32_t row, uint32_t wall>
+template<int height, int padding, std::uint32_t row, std::uint32_t wall>
 const Rows<height> Wrapper<args...>::BoardInitializer<height, padding, row, wall>::board = {
     Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
 };
 
-inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rotation rot) {
+inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientation, Rotation rot) {
     // [<block-orientation>][<rotate-direction>][<srs-index>]
     static const SRSKickData::Kick JLSTZ[4][2][5] = {{
             {{ 0,  0}, {-1,  0}, {-1,  1}, { 0, -2}, {-1, -2}},          // 0 -> 1
@@ -101,7 +102,7 @@ inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rot
     case BlockType::Z:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = JLSTZ[orientation][uint8_t(rot)],
+                .kicks  = JLSTZ[orientation][static_cast<std::uint8_t>(rot)],
                 .length = 5
             };
         } else if (rot == Rotation::HALF) {
@@ -114,7 +115,7 @@ inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rot
     case BlockType::I:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = I[orientation][uint8_t(rot)],
+                .kicks  = I[orientation][static_cast<std::uint8_t>(rot)],
                 .length = 5
             };
         } else if (rot == Rotation::HALF) {
@@ -127,7 +128,7 @@ inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rot
     case BlockType::O:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = O[orientation][uint8_t(rot)],
+                .kicks  = O[orientation][static_cast<std::uint8_t>(rot)],
                 .length = 1
             };
         } else if (rot == Rotation::HALF) {
@@ -147,7 +148,7 @@ inline static SRSKickData getSRSKickData(BlockType type, int8_t orientation, Rot
 }
 
 // srs_table[<block-type>][<block-orientation>][<rotate-direction>].kicks[<srs-index>]
-const SRSKickData srs_table[int8_t(BlockType::SIZE)][4][uint8_t(Rotation::SIZE)] = {
+const SRSKickData srs_table[static_cast<std::int8_t>(BlockType::SIZE)][4][static_cast<std::uint8_t>(Rotation::SIZE)] = {
     {
         {getSRSKickData(BlockType::Z, 0, Rotation::CW), getSRSKickData(BlockType::Z, 0, Rotation::CCW), getSRSKickData(BlockType::Z, 0, Rotation::HALF)},
         {getSRSKickData(BlockType::Z, 1, Rotation::CW), getSRSKickData(BlockType::Z, 1, Rotation::CCW), getSRSKickData(BlockType::Z, 1, Rotation::HALF)},
@@ -186,7 +187,7 @@ const SRSKickData srs_table[int8_t(BlockType::SIZE)][4][uint8_t(Rotation::SIZE)]
     },
 };
 
-inline static uint32_t xorshf32(uint32_t& seed) {
+inline static std::uint32_t xorshf32(std::uint32_t& seed) {
     seed ^= seed << 13;
     seed ^= seed >> 17;
     seed ^= seed << 5;
@@ -195,13 +196,13 @@ inline static uint32_t xorshf32(uint32_t& seed) {
 
 struct SevenBagPermutations {
     struct PackedSevenBag {
-        unsigned b0 : 3;
-        unsigned b1 : 3;
-        unsigned b2 : 3;
-        unsigned b3 : 3;
-        unsigned b4 : 3;
-        unsigned b5 : 3;
-        unsigned b6 : 3;
+        std::uint32_t b0 : 3;
+        std::uint32_t b1 : 3;
+        std::uint32_t b2 : 3;
+        std::uint32_t b3 : 3;
+        std::uint32_t b4 : 3;
+        std::uint32_t b5 : 3;
+        std::uint32_t b6 : 3;
     };
     // 7! = 5040
     enum { SIZE = 5040 };
@@ -213,28 +214,28 @@ inline static SevenBagPermutations generateSevenBagPermutations() {
     int index = 0;
     do {
         auto& ref = permutations.data[index++];
-        ref.b0 = unsigned(next[0]);
-        ref.b1 = unsigned(next[1]);
-        ref.b2 = unsigned(next[2]);
-        ref.b3 = unsigned(next[3]);
-        ref.b4 = unsigned(next[4]);
-        ref.b5 = unsigned(next[5]);
-        ref.b6 = unsigned(next[6]);
+        ref.b0 = static_cast<std::uint32_t>(next[0]);
+        ref.b1 = static_cast<std::uint32_t>(next[1]);
+        ref.b2 = static_cast<std::uint32_t>(next[2]);
+        ref.b3 = static_cast<std::uint32_t>(next[3]);
+        ref.b4 = static_cast<std::uint32_t>(next[4]);
+        ref.b5 = static_cast<std::uint32_t>(next[5]);
+        ref.b6 = static_cast<std::uint32_t>(next[6]);
     } while (std::next_permutation(next, next + 7));
     assert(index == SevenBagPermutations::SIZE);
     return permutations;
 }
 
-inline static void randomBlocks(BlockType dest[], uint32_t& seed) {
+inline static void randomBlocks(BlockType dest[], std::uint32_t& seed) {
     static const SevenBagPermutations seven_bag_permutations = generateSevenBagPermutations();
     auto& ref = seven_bag_permutations.data[xorshf32(seed) % SevenBagPermutations::SIZE];
-    dest[0] = BlockType(ref.b0);
-    dest[1] = BlockType(ref.b1);
-    dest[2] = BlockType(ref.b2);
-    dest[3] = BlockType(ref.b3);
-    dest[4] = BlockType(ref.b4);
-    dest[5] = BlockType(ref.b5);
-    dest[6] = BlockType(ref.b6);
+    dest[0] = static_cast<BlockType>(ref.b0);
+    dest[1] = static_cast<BlockType>(ref.b1);
+    dest[2] = static_cast<BlockType>(ref.b2);
+    dest[3] = static_cast<BlockType>(ref.b3);
+    dest[4] = static_cast<BlockType>(ref.b4);
+    dest[5] = static_cast<BlockType>(ref.b5);
+    dest[6] = static_cast<BlockType>(ref.b6);
 }
 
 inline static void initializeBoard(Board& board) {
@@ -262,7 +263,7 @@ inline static std::pair<bool, bool> isTspin(State* state) {
     if (count < 3) { return {false, false}; }
     // check for mini tspin (https://tetris.wiki/T-Spin)
     // orientation -> two corner indices
-    constexpr std::pair<uint32_t, uint32_t> mini_check_corner_table[] = {
+    constexpr std::pair<std::uint32_t, std::uint32_t> mini_check_corner_table[] = {
         {0, 1},
         {1, 3},
         {2, 3},
@@ -359,13 +360,13 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
 
 inline static void applyGarbage(Board& board, int lines, int hole_position) {
     if (lines <= 0) { return; }
-    constexpr uint32_t garbage = mkrow("BBBGGGGGGGGGGBBB");
+    constexpr std::uint32_t garbage = mkrow("BBBGGGGGGGGGGBBB");
     // shift up
     for (int i = 0; i + lines <= BOARD_BOTTOM; ++i) {
         board.data[i] = board.data[i + lines];
     }
     // add garbage rows
-    const uint32_t row = garbage & ~ops::shift(uint32_t(Cell::BLOCK), hole_position);
+    const std::uint32_t row = garbage & ~ops::shift(static_cast<std::uint32_t>(Cell::BLOCK), hole_position);
     for (int i = 0; i < lines; ++i) {
         board.data[BOARD_BOTTOM - i] = row;
     }
@@ -398,16 +399,16 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
     }
     // apply pending garbage with zero delay if no garbage blocking or no lines cleared
     if (!state->garbage_blocking || cleared_lines == 0) {
-        uint16_t total_garbage_spawned = 0;
+        std::uint16_t total_garbage_spawned = 0;
         for (int i = garbage_begin; i < garbage_end; ++i) {
             assert(state->garbage_queue[i] > 0);
             if (state->garbage_delay[i] > 0) {
                 assert(garbage_begin == i);
                 break; // stop at first delayed garbage (assume delays are in order)
             }
-            uint8_t lines_to_spawn = state->garbage_queue[i];
+            std::uint8_t lines_to_spawn = state->garbage_queue[i];
             if (total_garbage_spawned + lines_to_spawn > state->max_garbage_spawn) {
-                lines_to_spawn = state->max_garbage_spawn - total_garbage_spawned;
+                lines_to_spawn = static_cast<std::uint8_t>(state->max_garbage_spawn - total_garbage_spawned);
             }
             assert(lines_to_spawn > 0);
             total_garbage_spawned += lines_to_spawn;
@@ -448,8 +449,8 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
 }
 
 inline static int clearLines(State* state) {
-    constexpr uint32_t empty = mkrow("BBB..........BBB");
-    constexpr uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
+    constexpr std::uint32_t empty = mkrow("BBB..........BBB");
+    constexpr std::uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
     int count = 0;
     for (int i = BOARD_BOTTOM; i >= 0; i--) {
         while (i - count >= 0 && (state->board.data[i - count] & fullfilled) == fullfilled) {
@@ -469,7 +470,7 @@ inline static void processPiecePlacement(State* state) {
     ops::placeBlock(state->board, block, state->x, state->y);
     // clear lines and update state
     int cleared_lines = clearLines(state);
-    state->lines_cleared += cleared_lines;
+    state->lines_cleared += static_cast<std::uint32_t>(cleared_lines);
     state->piece_count++;
     if (cleared_lines > 0) {
         // check perfect clear
@@ -492,10 +493,13 @@ inline static void processPiecePlacement(State* state) {
     // calculate attack and counter garbage
     int attack = calculateAttack(state, cleared_lines);
     int lines_sent = processGarbageAndCounterAttack(state, attack, cleared_lines);
-    state->attack = attack;
-    state->lines_sent = lines_sent;
-    state->total_attack += attack;
-    state->total_lines_sent += lines_sent;
+    // update attack and lines sent in state (capped at max values for uint16_t)
+    assert(attack <= std::numeric_limits<std::uint16_t>::max());
+    assert(lines_sent <= std::numeric_limits<std::uint16_t>::max());
+    state->attack = static_cast<std::uint16_t>(attack);
+    state->lines_sent = static_cast<std::uint16_t>(lines_sent);
+    state->total_attack += static_cast<std::uint32_t>(attack);
+    state->total_lines_sent += static_cast<std::uint32_t>(lines_sent);
 }
 inline static BlockType fetchNextBlock(State* state) {
     BlockType next_block = state->next[0];
@@ -531,22 +535,22 @@ inline static bool moveBlock(State* state, int new_x, int new_y) {
     auto& block = ops::getBlock(state->current, state->orientation);
     bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y);
     if (can_place) {
-        state->x = new_x;
-        state->y = new_y;
+        state->x = static_cast<std::int8_t>(new_x);
+        state->y = static_cast<std::int8_t>(new_y);
     }
     return can_place;
 }
 inline static bool rotateBlock(State* state, Rotation rot) {
-    constexpr int8_t orientation_delta_table[uint8_t(Rotation::SIZE)] = {
+    constexpr std::uint8_t orientation_delta_table[static_cast<std::uint8_t>(Rotation::SIZE)] = {
         1, // CW  -> orientation + 1
         3, // CCW -> orientation - 1 (= +3 mod 4)
         2, // 180 -> orientation + 2
     };
-    const int8_t new_orientation = (state->orientation + orientation_delta_table[uint8_t(rot)]) % 4;
+    const std::uint8_t new_orientation = (state->orientation + orientation_delta_table[static_cast<std::uint8_t>(rot)]) % 4;
     auto& old_block = ops::getBlock(state->current, state->orientation);
     auto& new_block = ops::getBlock(state->current, new_orientation);
     // SRS kicks for CW/CCW/180
-    auto& [kicks, len] = srs_table[int8_t(state->current)][state->orientation][uint8_t(rot)];
+    auto& [kicks, len] = srs_table[static_cast<std::int8_t>(state->current)][state->orientation][static_cast<std::uint8_t>(rot)];
     // try SRS kicks
     for (int i = 0; i < len; ++i) {
         const int test_x = state->x + kicks[i].x;
@@ -554,16 +558,16 @@ inline static bool rotateBlock(State* state, Rotation rot) {
         if (ops::canPlaceBlock(state->board, new_block, test_x, test_y)) {
             // commit rotation + kick
             state->orientation = new_orientation;
-            state->x = test_x;
-            state->y = test_y;
-            state->srs_index = i;
+            state->x = static_cast<std::int8_t>(test_x);
+            state->y = static_cast<std::int8_t>(test_y);
+            state->srs_index = static_cast<std::int8_t>(i);
             return true;
         }
     }
     return false;
 }
 
-void setSeed(State* state, uint32_t seed, uint32_t garbage_seed) {
+void setSeed(State* state, std::uint32_t seed, std::uint32_t garbage_seed) {
     state->seed = seed;
     state->garbage_seed = garbage_seed;
 }
@@ -719,7 +723,7 @@ bool hold(State* state) {
     return true;
 }
 
-bool addGarbage(State* state, uint8_t lines, uint8_t delay) {
+bool addGarbage(State* state, std::uint8_t lines, std::uint8_t delay) {
     if (lines == 0) { return false; }
     for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
         if (state->garbage_queue[i] == 0) {
@@ -733,7 +737,7 @@ bool addGarbage(State* state, uint8_t lines, uint8_t delay) {
     return false;
 }
 
-void toString(State* state, char* buf, size_t size) {
+void toString(State* state, char* buf, std::size_t size) {
     // coordinates below: x is in units of 2 chars (each cell = 2 characters wide)
     constexpr int STRING_BOARD_WIDTH = 23;
     constexpr int STRING_BOARD_HEIGHT = 22;
@@ -793,7 +797,7 @@ void toString(State* state, char* buf, size_t size) {
             target_cell[1] = string_cell.right;
         }
     };
-    static constexpr auto drawBlock = [](StringLayout& sl, int string_x, int string_y, BlockType block_type, uint8_t orientation, bool half_shift = false, StringCell string_cell = {'[', ']'}) {
+    static constexpr auto drawBlock = [](StringLayout& sl, int string_x, int string_y, BlockType block_type, std::uint8_t orientation, bool half_shift = false, StringCell string_cell = {'[', ']'}) {
         auto& block = ops::getBlock(block_type, orientation);
         // put 4x4 block shape into the string layout
         for (int i = 0; i < 4; ++i) {
@@ -805,15 +809,15 @@ void toString(State* state, char* buf, size_t size) {
     };
     static constexpr auto setHold = [](StringLayout& sl, BlockType hold) {
         if (hold == BlockType::NONE) { return; }
-        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[int8_t(hold)]);
+        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::int8_t>(hold)]);
     };
     static constexpr auto setNext = [](StringLayout& sl, const BlockType* next) {
         for (int i = 0; i < 5; ++i) {
             if (next[i] == BlockType::NONE) { break; }
-            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[int8_t(next[i])]);
+            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::int8_t>(next[i])]);
         }
     };
-    static constexpr auto drawPendingGarbageQueue = [](StringLayout& sl, uint8_t garbage_queue[], uint8_t garbage_delay[]) {
+    static constexpr auto drawPendingGarbageQueue = [](StringLayout& sl, std::uint8_t garbage_queue[], std::uint8_t garbage_delay[]) {
         int string_y = STRING_GARBAGE_BOTTOM;
         for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
             if (garbage_queue[i] == 0 || string_y < STRING_GARBAGE_TOP) { break; }
