@@ -547,7 +547,6 @@ inline static bool rotateBlock(State* state, Rotation rot) {
         2, // 180 -> orientation + 2
     };
     const std::uint8_t new_orientation = (state->orientation + orientation_delta_table[static_cast<std::uint8_t>(rot)]) % 4;
-    auto& old_block = ops::getBlock(state->current, state->orientation);
     auto& new_block = ops::getBlock(state->current, new_orientation);
     // SRS kicks for CW/CCW/180
     auto& [kicks, len] = srs_table[static_cast<std::int8_t>(state->current)][state->orientation][static_cast<std::uint8_t>(rot)];
