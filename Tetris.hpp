@@ -11,43 +11,57 @@ constexpr int BOARD_LEFT    = 3;
 
 constexpr int GARBAGE_QUEUE_SIZE = 20;
 
-enum class Cell : std::uint32_t {
-    EMPTY   = 0b00'000000000000000000000000000000u,
-    GARBAGE = 0b01'000000000000000000000000000000u,
-    SHADOW  = 0b10'000000000000000000000000000000u,
-    BLOCK   = 0b11'000000000000000000000000000000u,
-};
-
+using Row = std::uint32_t;
 template <std::size_t N>
 struct Rows {
     enum { SIZE = N };
-    std::uint32_t data[N];
+    Row data[N];
 };
-
 using Board = Rows<BOARD_HEIGHT>;
 using Block = Rows<4>;
+
+/**
+ * Cell encoding (2 bits per cell):
+ * bit1 bit0
+ *    0    0 EMPTY   - unoccupied
+ *    0    1 BLOCK   - occupied (placed piece)
+ *    1    0 (reserved)
+ *    1    1 GARBAGE - occupied (garbage line)
+ * bit0 = "occupied" flag. All collision/line-clear logic tests bit0 only.
+ * GARBAGE is intentionally a superset of BLOCK (bit0 set + bit1 garbage flag).
+ */
+enum class Cell : Row {
+    EMPTY   = 0b00'000000000000000000000000000000u,
+    BLOCK   = 0b01'000000000000000000000000000000u,
+    GARBAGE = 0b11'000000000000000000000000000000u,
+};
+constexpr Row CELL_MASK = 0b11'000000000000000000000000000000u;
 
 /** 
  * Creates a 32-bit row representation from a C-style null-terminated string.
  * The string must be at most 16 characters long (excluding '\0').
- * Each character represents a cell: 'G' (GARBAGE), 'S' (SHADOW), 'B' (BLOCK),
+ * Each character represents a cell: 'B' (BLOCK), 'G' (GARBAGE),
  * or any other character (treated as EMPTY).
  * The input string is aligned to the most significant bits of the 32-bit row.
  * If the string is shorter than 16 characters, remaining bits are treated as EMPTY.
  */
 template<int N, typename = std::enable_if_t<(N <= 17)>>
-constexpr std::uint32_t mkrow(const char (&s)[N]) {
-    std::uint32_t bits = 0;
+constexpr Row mkrow(const char (&s)[N]) {
+    Row bits = 0;
     for (int i = 0; s[i]; ++i) {
         switch (s[i]) {
-        case 'G': bits |= (static_cast<std::uint32_t>(Cell::GARBAGE) >> (i << 1)); break;
-        case 'S': bits |= (static_cast<std::uint32_t>(Cell::SHADOW)  >> (i << 1)); break;
-        case 'B': bits |= (static_cast<std::uint32_t>(Cell::BLOCK)   >> (i << 1)); break;
-        default:  bits |= (static_cast<std::uint32_t>(Cell::EMPTY)   >> (i << 1)); break;
+        case 'B': bits |= (static_cast<Row>(Cell::BLOCK)   >> (i << 1)); break;
+        case 'G': bits |= (static_cast<Row>(Cell::GARBAGE) >> (i << 1)); break;
+        default:  bits |= (static_cast<Row>(Cell::EMPTY)   >> (i << 1)); break;
         }
     }
     return bits;
 }
+
+// Row patterns
+constexpr Row ROW_EMPTY   = mkrow("BBB..........BBB");  // walls + empty row
+constexpr Row ROW_FULL    = mkrow("BBBBBBBBBBBBBBBB");  // walls + full row
+constexpr Row ROW_GARBAGE = mkrow("BBBGGGGGGGGGGBBB");  // walls + full garbage row
 
 enum class BlockType : std::int8_t {
     NONE = -1,
@@ -225,7 +239,7 @@ extern const SRSKickData srs_table[static_cast<std::int8_t>(BlockType::SIZE)][4]
 
 namespace ops {
 
-inline constexpr std::uint32_t shift(std::uint32_t row, int dx) {
+inline constexpr Row shift(Row row, int dx) {
     return (dx >= 0) ? (row >> (dx << 1)) : (row << (-dx << 1));
 }
 template<std::size_t N>
@@ -241,13 +255,13 @@ inline constexpr Rows<N> shift(const Rows<N>& rows, int dx) {
     return result;
 }
 
-inline constexpr void setCell(std::uint32_t& row, int x, Cell cell) {
-    row = (row & ~shift(static_cast<std::uint32_t>(Cell::BLOCK), x)) | shift(static_cast<std::uint32_t>(cell), x);
+inline constexpr void setCell(Row& row, int x, Cell cell) {
+    row = (row & ~shift(CELL_MASK, x)) | shift(static_cast<Row>(cell), x);
 }
 template<std::size_t N>
 inline constexpr void setCell(Rows<N>& rows, int x, int y, Cell cell) { setCell(rows.data[y], x, cell); }
-inline constexpr Cell getCell(std::uint32_t row, int x) {
-    return static_cast<Cell>(shift(row, -x) & static_cast<std::uint32_t>(Cell::BLOCK));
+inline constexpr Cell getCell(Row row, int x) {
+    return static_cast<Cell>(shift(row, -x) & CELL_MASK);
 }
 template<std::size_t N>
 inline constexpr Cell getCell(const Rows<N>& rows, int x, int y) { return getCell(rows.data[y], x); }
@@ -256,6 +270,7 @@ template<std::size_t N>
 inline constexpr void placeRows(Board& board, const Rows<N>& rows, int x, int y) {
     for (std::size_t i = 0; i < N; ++i) { board.data[static_cast<std::size_t>(y) + i] |= shift(rows.data[i], x); }
 }
+// Precondition: only remove rows that were previously placed on empty cells via placeRows.
 template<std::size_t N>
 inline constexpr void removeRows(Board& board, const Rows<N>& rows, int x, int y) {
     for (std::size_t i = 0; i < N; ++i) { board.data[static_cast<std::size_t>(y) + i] &= ~shift(rows.data[i], x); }

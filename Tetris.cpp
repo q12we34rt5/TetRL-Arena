@@ -15,17 +15,17 @@ template<template<int...> class Container, int ...args>
 struct IndexGenerator<Container, 0, args...> { using result = Container<args...>; };
 template<int ...args>
 struct Wrapper {
-    template<int height, int padding, std::uint32_t row, std::uint32_t wall>
+    template<int height, int padding, Row row, Row wall>
     struct BoardInitializer {
         template<bool condition, typename x> struct If {};
-        template<typename x> struct If<true, x> { static constexpr std::uint32_t value = wall; };
-        template<typename x> struct If<false, x> { static constexpr std::uint32_t value = row; };
+        template<typename x> struct If<true, x> { static constexpr Row value = wall; };
+        template<typename x> struct If<false, x> { static constexpr Row value = row; };
 
         static const Rows<height> board;
     };
 };
 template<int ...args>
-template<int height, int padding, std::uint32_t row, std::uint32_t wall>
+template<int height, int padding, Row row, Row wall>
 const Rows<height> Wrapper<args...>::BoardInitializer<height, padding, row, wall>::board = {
     Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
 };
@@ -240,8 +240,8 @@ inline static void randomBlocks(BlockType dest[], std::uint32_t& seed) {
 
 inline static void initializeBoard(Board& board) {
     using Initializer = IndexGenerator<Wrapper, BOARD_HEIGHT>::result::BoardInitializer<BOARD_HEIGHT, BOARD_PADDING,
-        mkrow("BBB          BBB"),  // row data
-        mkrow("BBBBBBBBBBBBBBBB")>; // wall data
+        ROW_EMPTY, // row data
+        ROW_FULL>; // wall data
     board = Initializer::board;
 }
 
@@ -360,13 +360,12 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
 
 inline static void applyGarbage(Board& board, int lines, int hole_position) {
     if (lines <= 0) { return; }
-    constexpr std::uint32_t garbage = mkrow("BBBGGGGGGGGGGBBB");
     // shift up
     for (int i = 0; i + lines <= BOARD_BOTTOM; ++i) {
         board.data[i] = board.data[i + lines];
     }
     // add garbage rows
-    const std::uint32_t row = garbage & ~ops::shift(static_cast<std::uint32_t>(Cell::BLOCK), hole_position);
+    const Row row = ROW_GARBAGE & ~ops::shift(CELL_MASK, hole_position);
     for (int i = 0; i < lines; ++i) {
         board.data[BOARD_BOTTOM - i] = row;
     }
@@ -449,17 +448,15 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
 }
 
 inline static int clearLines(State* state) {
-    constexpr std::uint32_t empty = mkrow("BBB..........BBB");
-    constexpr std::uint32_t fullfilled = mkrow("...GGGGGGGGGG...");
     int count = 0;
     for (int i = BOARD_BOTTOM; i >= 0; i--) {
-        while (i - count >= 0 && (state->board.data[i - count] & fullfilled) == fullfilled) {
+        while (i - count >= 0 && (state->board.data[i - count] & ROW_FULL) == ROW_FULL) {
             count++;
         }
         if (i - count >= 0) {
             state->board.data[i] = state->board.data[i - count];
         } else {
-            state->board.data[i] = empty;
+            state->board.data[i] = ROW_EMPTY;
         }
     }
     return count;
@@ -476,7 +473,7 @@ inline static void processPiecePlacement(State* state) {
         // check perfect clear
         state->perfect_clear = true;
         for (int i = 0; i <= BOARD_BOTTOM; ++i) {
-            if (state->board.data[i] & mkrow("...GGGGGGGGGG...")) {
+            if (state->board.data[i] != ROW_EMPTY) {
                 state->perfect_clear = false;
                 break;
             }
@@ -847,9 +844,8 @@ void toString(State* state, char* buf, std::size_t size) {
             StringCell string_cell;
             switch (cell) {
             case Cell::EMPTY:   string_cell = {' ', ' '}; break;
-            case Cell::GARBAGE: string_cell = {'#', '#'}; break;
-            case Cell::SHADOW:  string_cell = {':', ':'}; break;
             case Cell::BLOCK:   string_cell = {'[', ']'}; break;
+            case Cell::GARBAGE: string_cell = {'#', '#'}; break;
             default: assert(false); break;
             }
             int string_x = x - BOARD_LEFT + STRING_BOARD_LEFT;
