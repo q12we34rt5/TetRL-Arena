@@ -804,11 +804,11 @@ void toString(State* state, char* buf, std::size_t size) {
             }
         }
     };
-    static constexpr auto setHold = [](StringLayout& sl, BlockType hold) {
+    static constexpr auto drawHold = [](StringLayout& sl, BlockType hold) {
         if (hold == BlockType::NONE) { return; }
         drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(hold)]);
     };
-    static constexpr auto setNext = [](StringLayout& sl, const BlockType* next) {
+    static constexpr auto drawNext = [](StringLayout& sl, const BlockType* next) {
         for (int i = 0; i < 5; ++i) {
             if (next[i] == BlockType::NONE) { break; }
             drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(next[i])]);
@@ -863,8 +863,8 @@ void toString(State* state, char* buf, std::size_t size) {
     int current_string_y = state->y - BOARD_TOP + STRING_BOARD_TOP;
     drawBlock(*sl, current_string_x, current_string_y, state->current, state->orientation);
     // draw hold and next blocks
-    setHold(*sl, state->hold);
-    setNext(*sl, state->next);
+    drawHold(*sl, state->hold);
+    drawNext(*sl, state->next);
     // draw pending garbage queue
     drawPendingGarbageQueue(*sl, state->garbage_queue, state->garbage_delay);
 }
