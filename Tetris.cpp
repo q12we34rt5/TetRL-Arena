@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <utility>
 #include <limits>
+#include <type_traits>
 
 #include <cassert>
 
@@ -102,7 +103,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
     case BlockType::Z:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = JLSTZ[orientation][static_cast<std::uint8_t>(rot)],
+                .kicks  = JLSTZ[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
                 .length = 5
             };
         } else if (rot == Rotation::HALF) {
@@ -115,7 +116,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
     case BlockType::I:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = I[orientation][static_cast<std::uint8_t>(rot)],
+                .kicks  = I[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
                 .length = 5
             };
         } else if (rot == Rotation::HALF) {
@@ -128,7 +129,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
     case BlockType::O:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
-                .kicks  = O[orientation][static_cast<std::uint8_t>(rot)],
+                .kicks  = O[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
                 .length = 1
             };
         } else if (rot == Rotation::HALF) {
@@ -148,7 +149,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
 }
 
 // srs_table[<block-type>][<block-orientation>][<rotate-direction>].kicks[<srs-index>]
-const SRSKickData srs_table[static_cast<std::int8_t>(BlockType::SIZE)][4][static_cast<std::uint8_t>(Rotation::SIZE)] = {
+const SRSKickData srs_table[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)] = {
     {
         {getSRSKickData(BlockType::Z, 0, Rotation::CW), getSRSKickData(BlockType::Z, 0, Rotation::CCW), getSRSKickData(BlockType::Z, 0, Rotation::HALF)},
         {getSRSKickData(BlockType::Z, 1, Rotation::CW), getSRSKickData(BlockType::Z, 1, Rotation::CCW), getSRSKickData(BlockType::Z, 1, Rotation::HALF)},
@@ -538,15 +539,15 @@ inline static bool moveBlock(State* state, int new_x, int new_y) {
     return can_place;
 }
 inline static bool rotateBlock(State* state, Rotation rot) {
-    constexpr std::uint8_t orientation_delta_table[static_cast<std::uint8_t>(Rotation::SIZE)] = {
+    constexpr std::uint8_t orientation_delta_table[static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)] = {
         1, // CW  -> orientation + 1
         3, // CCW -> orientation - 1 (= +3 mod 4)
         2, // 180 -> orientation + 2
     };
-    const std::uint8_t new_orientation = (state->orientation + orientation_delta_table[static_cast<std::uint8_t>(rot)]) % 4;
+    const std::uint8_t new_orientation = (state->orientation + orientation_delta_table[static_cast<std::underlying_type_t<Rotation>>(rot)]) % 4;
     auto& new_block = ops::getBlock(state->current, new_orientation);
     // SRS kicks for CW/CCW/180
-    auto& [kicks, len] = srs_table[static_cast<std::int8_t>(state->current)][state->orientation][static_cast<std::uint8_t>(rot)];
+    auto& [kicks, len] = srs_table[static_cast<std::underlying_type_t<BlockType>>(state->current)][state->orientation][static_cast<std::underlying_type_t<Rotation>>(rot)];
     // try SRS kicks
     for (int i = 0; i < len; ++i) {
         const int test_x = state->x + kicks[i].x;
@@ -805,12 +806,12 @@ void toString(State* state, char* buf, std::size_t size) {
     };
     static constexpr auto setHold = [](StringLayout& sl, BlockType hold) {
         if (hold == BlockType::NONE) { return; }
-        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::int8_t>(hold)]);
+        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(hold)]);
     };
     static constexpr auto setNext = [](StringLayout& sl, const BlockType* next) {
         for (int i = 0; i < 5; ++i) {
             if (next[i] == BlockType::NONE) { break; }
-            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::int8_t>(next[i])]);
+            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(next[i])]);
         }
     };
     static constexpr auto drawPendingGarbageQueue = [](StringLayout& sl, std::uint8_t garbage_queue[], std::uint8_t garbage_delay[]) {

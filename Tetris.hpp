@@ -69,7 +69,7 @@ enum class BlockType : std::int8_t {
     SIZE
 };
 
-constexpr Block blocks[static_cast<std::int8_t>(BlockType::SIZE)][4] = {{
+constexpr Block blocks[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4] = {{
     {mkrow("BB  "),
      mkrow(" BB "),
      mkrow("    "),
@@ -235,7 +235,7 @@ enum class Rotation : std::uint8_t {
     SIZE
 };
 
-extern const SRSKickData srs_table[static_cast<std::int8_t>(BlockType::SIZE)][4][static_cast<std::uint8_t>(Rotation::SIZE)];
+extern const SRSKickData srs_table[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)];
 
 namespace ops {
 
@@ -283,7 +283,7 @@ inline constexpr bool canPlaceRows(const Board& board, const Rows<N>& rows, int 
     return true;
 }
 
-inline constexpr const Block& getBlock(BlockType type, std::uint8_t orientation) { return blocks[static_cast<std::int8_t>(type)][orientation]; }
+inline constexpr const Block& getBlock(BlockType type, std::uint8_t orientation) { return blocks[static_cast<std::underlying_type_t<BlockType>>(type)][orientation]; }
 inline constexpr void placeBlock(Board& board, const Block& block, int x, int y) { placeRows(board, block, x, y); }
 inline constexpr void removeBlock(Board& board, const Block& block, int x, int y) { removeRows(board, block, x, y); }
 inline constexpr bool canPlaceBlock(const Board& board, const Block& block, int x, int y) { return canPlaceRows(board, block, x, y); }
