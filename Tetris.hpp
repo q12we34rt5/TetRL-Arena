@@ -309,6 +309,7 @@ bool rotateCounterclockwise(State* state);
 bool rotateClockwise(State* state);
 bool rotate180(State* state);
 bool hold(State* state);
+bool noop(State* state);
 
 bool addGarbage(State* state, std::uint8_t lines, std::uint8_t delay);
 

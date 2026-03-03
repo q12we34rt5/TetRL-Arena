@@ -719,6 +719,10 @@ bool hold(State* state) {
     newCurrentBlock(state, new_block);
     return true;
 }
+bool noop(State* state) {
+    clearLastPlacementResult(state);
+    return true;
+}
 
 bool addGarbage(State* state, std::uint8_t lines, std::uint8_t delay) {
     if (lines == 0) { return false; }
