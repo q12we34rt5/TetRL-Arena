@@ -412,8 +412,8 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
             }
             assert(lines_to_spawn > 0);
             total_garbage_spawned += lines_to_spawn;
-            // generate random hole position (assuming 10-wide playfield)
-            int hole_position = xorshf32(state->garbage_seed) % 10 + BOARD_LEFT;
+            // generate random hole position
+            int hole_position = xorshf32(state->garbage_seed) % (BOARD_RIGHT - BOARD_LEFT + 1) + BOARD_LEFT;
             // apply this segment of garbage
             applyGarbage(state->board, lines_to_spawn, hole_position);
             // update remaining garbage in this entry
@@ -512,8 +512,8 @@ inline static bool newCurrentBlock(State* state, BlockType block_type) {
     // set new current block
     state->current = block_type;
     state->orientation = 0;
-    state->x = BOARD_LEFT + 3;
-    state->y = BOARD_TOP;
+    state->x = BLOCK_SPAWN_X;
+    state->y = BLOCK_SPAWN_Y;
     // reset state for new block
     state->srs_index = -1;
     state->was_last_rotation = false;
@@ -840,7 +840,7 @@ void toString(State* state, char* buf, std::size_t size) {
     memcpy(sl->board, initial_board, sizeof(sl->board));
     // draw state to buf
     for (int y = BOARD_TOP; y <= BOARD_BOTTOM; ++y) {
-        for (int x = BOARD_LEFT; x < BOARD_LEFT + 10; ++x) {
+        for (int x = BOARD_LEFT; x <= BOARD_RIGHT; ++x) {
             Cell cell = ops::getCell(state->board, x, y);
             StringCell string_cell;
             switch (cell) {

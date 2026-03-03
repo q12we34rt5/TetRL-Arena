@@ -8,6 +8,10 @@ constexpr int BOARD_PADDING = 4;
 constexpr int BOARD_TOP     = BOARD_HEIGHT - BOARD_PADDING - 21;
 constexpr int BOARD_BOTTOM  = BOARD_TOP + 20;
 constexpr int BOARD_LEFT    = 3;
+constexpr int BOARD_RIGHT   = BOARD_LEFT + 9;
+
+constexpr int BLOCK_SPAWN_X = BOARD_LEFT + 3;
+constexpr int BLOCK_SPAWN_Y = BOARD_TOP;
 
 constexpr int GARBAGE_QUEUE_SIZE = 20;
 
