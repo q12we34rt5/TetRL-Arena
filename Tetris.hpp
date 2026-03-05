@@ -3,12 +3,15 @@
 #include <cstddef>
 #include <type_traits>
 
-constexpr int BOARD_HEIGHT  = 32;
-constexpr int BOARD_PADDING = 4;
-constexpr int BOARD_TOP     = BOARD_HEIGHT - BOARD_PADDING - 20;
-constexpr int BOARD_BOTTOM  = BOARD_TOP + 19;
-constexpr int BOARD_LEFT    = 3;
-constexpr int BOARD_RIGHT   = BOARD_LEFT + 9;
+constexpr int BOARD_HEIGHT  = 32;   // total rows
+constexpr int BOARD_WIDTH   = 16;   // total columns (2-bit cells per 32-bit row)
+
+constexpr int BOARD_TOP     = 9;    // first visible row
+constexpr int BOARD_BOTTOM  = 28;   // last visible row
+constexpr int BOARD_LEFT    = 3;    // first playfield column
+constexpr int BOARD_RIGHT   = 12;   // last playfield column
+
+constexpr int BOARD_FLOOR   = BOARD_HEIGHT - BOARD_BOTTOM - 1;  // floor wall thickness
 
 constexpr int BLOCK_SPAWN_X = BOARD_LEFT + 3;
 constexpr int BLOCK_SPAWN_Y = BOARD_TOP - 1;

@@ -16,7 +16,7 @@ template<template<int...> class Container, int ...args>
 struct IndexGenerator<Container, 0, args...> { using result = Container<args...>; };
 template<int ...args>
 struct Wrapper {
-    template<int height, int padding, Row row, Row wall>
+    template<int height, int floor, Row row, Row wall>
     struct BoardInitializer {
         template<bool condition, typename x> struct If {};
         template<typename x> struct If<true, x> { static constexpr Row value = wall; };
@@ -26,9 +26,9 @@ struct Wrapper {
     };
 };
 template<int ...args>
-template<int height, int padding, Row row, Row wall>
-const Rows<height> Wrapper<args...>::BoardInitializer<height, padding, row, wall>::board = {
-    Wrapper<args...>::template BoardInitializer<height, padding, row, wall>::template If<(/*args < padding || */args >= height - padding), int>::value...
+template<int height, int floor, Row row, Row wall>
+const Rows<height> Wrapper<args...>::BoardInitializer<height, floor, row, wall>::board = {
+    Wrapper<args...>::template BoardInitializer<height, floor, row, wall>::template If<(args >= height - floor), int>::value...
 };
 
 inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientation, Rotation rot) {
@@ -240,7 +240,7 @@ inline static void randomBlocks(BlockType dest[], std::uint32_t& seed) {
 }
 
 inline static void initializeBoard(Board& board) {
-    using Initializer = IndexGenerator<Wrapper, BOARD_HEIGHT>::result::BoardInitializer<BOARD_HEIGHT, BOARD_PADDING,
+    using Initializer = IndexGenerator<Wrapper, BOARD_HEIGHT>::result::BoardInitializer<BOARD_HEIGHT, BOARD_FLOOR,
         ROW_EMPTY, // row data
         ROW_FULL>; // wall data
     board = Initializer::board;
