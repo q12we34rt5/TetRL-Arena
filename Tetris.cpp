@@ -843,7 +843,7 @@ void toString(State* state, char* buf, std::size_t size) {
     // copy the initial board layout
     memcpy(sl->board, initial_board, sizeof(sl->board));
     // draw state to buf
-    for (int y = BOARD_TOP; y <= BOARD_BOTTOM; ++y) {
+    for (int y = BOARD_TOP - 1; y <= BOARD_BOTTOM; ++y) {
         for (int x = BOARD_LEFT; x <= BOARD_RIGHT; ++x) {
             Cell cell = ops::getCell(state->board, x, y);
             StringCell string_cell;
@@ -854,17 +854,17 @@ void toString(State* state, char* buf, std::size_t size) {
             default: assert(false); break;
             }
             int string_x = x - BOARD_LEFT + STRING_BOARD_LEFT;
-            int string_y = y - BOARD_TOP + STRING_BOARD_TOP;
+            int string_y = y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
             drawStringCell(*sl, string_x, string_y, string_cell);
         }
     }
     // draw shadow block
     int shadow_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
-    int shadow_string_y = shadow_y - BOARD_TOP + STRING_BOARD_TOP;
+    int shadow_string_y = shadow_y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
     drawBlock(*sl, shadow_string_x, shadow_string_y, state->current, state->orientation, false, {':', ':'});
     // draw current block
     int current_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
-    int current_string_y = state->y - BOARD_TOP + STRING_BOARD_TOP;
+    int current_string_y = state->y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
     drawBlock(*sl, current_string_x, current_string_y, state->current, state->orientation);
     // draw hold and next blocks
     drawHold(*sl, state->hold);
