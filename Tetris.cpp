@@ -304,7 +304,7 @@ inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type
     return false;
 }
 
-inline static int calculateAttack(const State* state, int cleared_lines) {
+inline static int calculateAttack(const State* state) {
     // Jstris attack table (https://jstris.jezevec10.com/guide#attack-and-combo-table, https://tetris.wiki/Jstris#Details)
     // | Attack Type        | Lines Sent || Combo # | Lines Sent |
     // | 0 lines            |          0 ||       0 |          0 |
@@ -320,7 +320,7 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
     // | Back-to-Back       |         +1 ||      10 |          4 |
     // |                    |            ||      11 |          4 |
     // |                    |            ||     12+ |          5 |
-    if (cleared_lines == 0) { return 0; }
+    if (state->lines_cleared == 0) { return 0; }
     bool is_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN;
     bool is_mini_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN_MINI;
     bool is_b2b = state->back_to_back_count > 0;
@@ -328,13 +328,13 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
     int base = 0;
     if (is_tspin) {
         // T-spin Single = 2, Double = 4, Triple = 6
-        base = cleared_lines << 1;
+        base = state->lines_cleared << 1;
     } else if (is_mini_tspin) {
         // T-spin Mini Single = 0, Double = 4
-        base = (cleared_lines == 2) << 2;
+        base = (state->lines_cleared == 2) << 2;
     } else {
         // normal clears
-        switch (cleared_lines) {
+        switch (state->lines_cleared) {
         case 1: base = 0; break;
         case 2: base = 1; break;
         case 3: base = 2; break;
@@ -346,7 +346,7 @@ inline static int calculateAttack(const State* state, int cleared_lines) {
     if (state->perfect_clear) { base = 10; }
     // --- Back-to-Back bonus ---
     // B2B applies to Tetris and T-spins, but NOT Mini T-spin Singles
-    if (is_b2b && (cleared_lines >= 4 || is_tspin)) { base += 1; }
+    if (is_b2b && (state->lines_cleared >= 4 || is_tspin)) { base += 1; }
     // --- Combo bonus ---
     // combo_count: -1 = no combo, 0 = first clear (combo 0), 1 = second consecutive (combo 1), ...
     constexpr int combo_table[] = { 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5 };
@@ -372,7 +372,7 @@ inline static void applyGarbage(Board& board, int lines, int hole_position) {
     }
 }
 
-inline static int processGarbageAndCounterAttack(State* state, int attack, int cleared_lines) {
+inline static int processGarbageAndCounterAttack(State* state, int attack) {
     int garbage_begin = 0, garbage_end = 0; // [begin, end) of pending garbage segments
     // decrement delays and records the range of pending garbage
     for (int i = 0; i < GARBAGE_QUEUE_SIZE; ++i) {
@@ -398,7 +398,7 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
         }
     }
     // apply pending garbage with zero delay if no garbage blocking or no lines cleared
-    if (!state->garbage_blocking || cleared_lines == 0) {
+    if (!state->garbage_blocking || state->lines_cleared == 0) {
         std::uint16_t total_garbage_spawned = 0;
         for (int i = garbage_begin; i < garbage_end; ++i) {
             assert(state->garbage_queue[i] > 0);
@@ -448,7 +448,7 @@ inline static int processGarbageAndCounterAttack(State* state, int attack, int c
     return remaining_attack;
 }
 
-inline static int clearLines(State* state) {
+inline static std::uint16_t clearLines(State* state) {
     int count = 0;
     for (int i = BOARD_BOTTOM; i >= 0; i--) {
         while (i - count >= 0 && (state->board.data[i - count] & ROW_FULL) == ROW_FULL) {
@@ -460,17 +460,17 @@ inline static int clearLines(State* state) {
             state->board.data[i] = ROW_EMPTY;
         }
     }
-    return count;
+    return static_cast<std::uint16_t>(count);
 }
 inline static void processPiecePlacement(State* state) {
     // place the current block on the board
     auto& block = ops::getBlock(state->current, state->orientation);
     ops::placeBlock(state->board, block, state->x, state->y);
     // clear lines and update state
-    int cleared_lines = clearLines(state);
-    state->lines_cleared += static_cast<std::uint32_t>(cleared_lines);
+    state->lines_cleared = clearLines(state);
+    state->total_lines_cleared += state->lines_cleared;
     state->piece_count++;
-    if (cleared_lines > 0) {
+    if (state->lines_cleared > 0) {
         // check perfect clear
         state->perfect_clear = true;
         for (int i = 0; i <= BOARD_BOTTOM; ++i) {
@@ -482,15 +482,15 @@ inline static void processPiecePlacement(State* state) {
         // update combo and back-to-back counts
         state->combo_count++;
         state->back_to_back_count
-            = (isBackToBackSpinType(state->current, state->spin_type) || cleared_lines == 4) // T-spin or Tetris
+            = (isBackToBackSpinType(state->current, state->spin_type) || state->lines_cleared == 4) // T-spin or Tetris
             ? state->back_to_back_count + 1
             : -1;
     } else {
         state->combo_count = -1;
     }
     // calculate attack and counter garbage
-    int attack = calculateAttack(state, cleared_lines);
-    int lines_sent = processGarbageAndCounterAttack(state, attack, cleared_lines);
+    int attack = calculateAttack(state);
+    int lines_sent = processGarbageAndCounterAttack(state, attack);
     // update attack and lines sent in state (capped at max values for uint16_t)
     assert(attack <= std::numeric_limits<std::uint16_t>::max());
     assert(lines_sent <= std::numeric_limits<std::uint16_t>::max());
@@ -580,7 +580,6 @@ void reset(State* state) {
     state->orientation = 0;
     state->x = -1;
     state->y = -1;
-    state->lines_cleared = 0;
     state->srs_index = -1;
     state->piece_count = 0;
     state->was_last_rotation = false;
@@ -589,13 +588,15 @@ void reset(State* state) {
     // -1 because the first clear is not considered a back-to-back or a combo
     state->back_to_back_count = -1;
     state->combo_count = -1;
+    state->lines_cleared = 0;
+    state->attack = 0;
+    state->lines_sent = 0;
+    state->total_lines_cleared = 0;
+    state->total_attack = 0;
+    state->total_lines_sent = 0;
     // initialize garbage queues
     std::fill(std::begin(state->garbage_queue), std::end(state->garbage_queue), 0);
     std::fill(std::begin(state->garbage_delay), std::end(state->garbage_delay), 0);
-    state->attack = 0;
-    state->lines_sent = 0;
-    state->total_attack = 0;
-    state->total_lines_sent = 0;
     // spawn current block
     BlockType next_block = fetchNextBlock(state);
     newCurrentBlock(state, next_block);
@@ -604,6 +605,7 @@ void reset(State* state) {
 // reset output fields from the last piece placement
 inline static void clearLastPlacementResult(State* state) {
     state->perfect_clear = false;
+    state->lines_cleared = 0;
     state->attack = 0;
     state->lines_sent = 0;
 }
