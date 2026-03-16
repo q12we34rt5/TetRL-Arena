@@ -1,4 +1,4 @@
-#include "Tetris.hpp"
+#include "tetris.hpp"
 
 #include <cstdio>
 #include <cstring>
