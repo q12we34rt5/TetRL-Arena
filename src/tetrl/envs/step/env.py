@@ -97,7 +97,11 @@ class StepEnv(gymnasium.Env):
         The 12 actions defined in :class:`Action`.
     """
 
-    metadata = {"render_modes": ["ansi"]}
+    metadata = {
+        "render_modes": ["ansi"],
+        # Declared for Gymnasium's metadata checks; ansi rendering is not timed here.
+        "render_fps": 1,
+    }
 
     def __init__(
         self,
