@@ -285,6 +285,7 @@ inline constexpr void removeRows(Board& board, const Rows<N>& rows, int x, int y
 }
 template<std::size_t N>
 inline constexpr bool canPlaceRows(const Board& board, const Rows<N>& rows, int x, int y) {
+    if (y < 0 || static_cast<std::size_t>(y) + N > Board::SIZE) { return false; }
     for (std::size_t i = 0; i < N; ++i) {
         if ((board.data[static_cast<std::size_t>(y) + i] & shift(rows.data[i], x)) != 0) { return false; }
     }
