@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "tetrl"
 version = "0.1.0"
 description = "TetRL: Tetris reinforcement-learning toolkit"
+readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 dependencies = [
