@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <type_traits>
 
+namespace tetrl {
+
 constexpr int BOARD_HEIGHT  = 32;   // total rows
 constexpr int BOARD_WIDTH   = 16;   // total columns (2-bit cells per 32-bit row)
 
@@ -323,3 +325,5 @@ void toString(State* state, char* buf, std::size_t size);
 void placeCurrentBlock(State* state);
 void removeCurrentBlock(State* state);
 bool canPlaceCurrentBlock(State* state);
+
+} // namespace tetrl

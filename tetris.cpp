@@ -10,6 +10,8 @@
 
 #include <cassert>
 
+namespace tetrl {
+
 template<template<int...> class Container, int n, int ...args>
 struct IndexGenerator : IndexGenerator<Container, n - 1, n - 1, args...> {};
 template<template<int...> class Container, int ...args>
@@ -878,3 +880,5 @@ void toString(State* state, char* buf, std::size_t size) {
 void placeCurrentBlock(State* state) { ops::placeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
 void removeCurrentBlock(State* state) { ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
 bool canPlaceCurrentBlock(State* state) { return ops::canPlaceBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
+
+} // namespace tetrl
