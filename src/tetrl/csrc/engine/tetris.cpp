@@ -855,7 +855,7 @@ void toString(State* state, char* buf, std::size_t size) {
             case Cell::EMPTY:   string_cell = {' ', ' '}; break;
             case Cell::BLOCK:   string_cell = {'[', ']'}; break;
             case Cell::GARBAGE: string_cell = {'#', '#'}; break;
-            default: assert(false); break;
+            default: string_cell = {'-', '-'}; assert(false); break;
             }
             int string_x = x - BOARD_LEFT + STRING_BOARD_LEFT;
             int string_y = y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
