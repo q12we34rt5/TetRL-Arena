@@ -14,8 +14,8 @@ BOARD_RIGHT = 12  # last playfield column
 
 BOARD_FLOOR = BOARD_HEIGHT - BOARD_BOTTOM - 1  # floor wall thickness
 
-BLOCK_SPAWN_X = BOARD_LEFT + 3
-BLOCK_SPAWN_Y = BOARD_TOP - 1
+PIECE_SPAWN_X = BOARD_LEFT + 3
+PIECE_SPAWN_Y = BOARD_TOP - 1
 
 GARBAGE_QUEUE_SIZE = 20
 
@@ -29,7 +29,7 @@ class Cell(enum.IntEnum):
 CELL_MASK = 0b11_000000000000000000000000000000
 
 
-class BlockType(enum.IntEnum):
+class PieceType(enum.IntEnum):
     NONE = -1
     Z = 0
     L = 1
@@ -41,7 +41,7 @@ class BlockType(enum.IntEnum):
 
     @property
     def char(self) -> str:
-        return "." if self == BlockType.NONE else self.name
+        return "." if self == PieceType.NONE else self.name
 
 
 class SpinType(enum.IntEnum):

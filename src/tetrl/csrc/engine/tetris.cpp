@@ -33,8 +33,8 @@ const Rows<height> Wrapper<args...>::BoardInitializer<height, floor, row, wall>:
     Wrapper<args...>::template BoardInitializer<height, floor, row, wall>::template If<(args >= height - floor), int>::value...
 };
 
-inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientation, Rotation rot) {
-    // [<block-orientation>][<rotate-direction>][<srs-index>]
+inline static SRSKickData getSRSKickData(PieceType type, std::uint8_t orientation, Rotation rot) {
+    // [<piece-orientation>][<rotate-direction>][<srs-index>]
     static const SRSKickData::Kick JLSTZ[4][2][5] = {{
             {{ 0,  0}, {-1,  0}, {-1,  1}, { 0, -2}, {-1, -2}},          // 0 -> 1
             {{ 0,  0}, { 1,  0}, { 1,  1}, { 0, -2}, { 1, -2}},          // 0 -> 3
@@ -98,11 +98,11 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
         }
     };
     switch (type) {
-    case BlockType::J:
-    case BlockType::L:
-    case BlockType::S:
-    case BlockType::T:
-    case BlockType::Z:
+    case PieceType::J:
+    case PieceType::L:
+    case PieceType::S:
+    case PieceType::T:
+    case PieceType::Z:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = JLSTZ[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
@@ -115,7 +115,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
             };
         }
         break;
-    case BlockType::I:
+    case PieceType::I:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = I[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
@@ -128,7 +128,7 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
             };
         }
         break;
-    case BlockType::O:
+    case PieceType::O:
         if (rot == Rotation::CW || rot == Rotation::CCW) {
             return {
                 .kicks  = O[orientation][static_cast<std::underlying_type_t<Rotation>>(rot)],
@@ -150,43 +150,43 @@ inline static SRSKickData getSRSKickData(BlockType type, std::uint8_t orientatio
     };
 }
 
-// srs_table[<block-type>][<block-orientation>][<rotate-direction>].kicks[<srs-index>]
-const SRSKickData srs_table[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)] = {
+// srs_table[<piece-type>][<piece-orientation>][<rotate-direction>].kicks[<srs-index>]
+const SRSKickData srs_table[static_cast<std::underlying_type_t<PieceType>>(PieceType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)] = {
     {
-        {getSRSKickData(BlockType::Z, 0, Rotation::CW), getSRSKickData(BlockType::Z, 0, Rotation::CCW), getSRSKickData(BlockType::Z, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::Z, 1, Rotation::CW), getSRSKickData(BlockType::Z, 1, Rotation::CCW), getSRSKickData(BlockType::Z, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::Z, 2, Rotation::CW), getSRSKickData(BlockType::Z, 2, Rotation::CCW), getSRSKickData(BlockType::Z, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::Z, 3, Rotation::CW), getSRSKickData(BlockType::Z, 3, Rotation::CCW), getSRSKickData(BlockType::Z, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::Z, 0, Rotation::CW), getSRSKickData(PieceType::Z, 0, Rotation::CCW), getSRSKickData(PieceType::Z, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::Z, 1, Rotation::CW), getSRSKickData(PieceType::Z, 1, Rotation::CCW), getSRSKickData(PieceType::Z, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::Z, 2, Rotation::CW), getSRSKickData(PieceType::Z, 2, Rotation::CCW), getSRSKickData(PieceType::Z, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::Z, 3, Rotation::CW), getSRSKickData(PieceType::Z, 3, Rotation::CCW), getSRSKickData(PieceType::Z, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::L, 0, Rotation::CW), getSRSKickData(BlockType::L, 0, Rotation::CCW), getSRSKickData(BlockType::L, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::L, 1, Rotation::CW), getSRSKickData(BlockType::L, 1, Rotation::CCW), getSRSKickData(BlockType::L, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::L, 2, Rotation::CW), getSRSKickData(BlockType::L, 2, Rotation::CCW), getSRSKickData(BlockType::L, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::L, 3, Rotation::CW), getSRSKickData(BlockType::L, 3, Rotation::CCW), getSRSKickData(BlockType::L, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::L, 0, Rotation::CW), getSRSKickData(PieceType::L, 0, Rotation::CCW), getSRSKickData(PieceType::L, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::L, 1, Rotation::CW), getSRSKickData(PieceType::L, 1, Rotation::CCW), getSRSKickData(PieceType::L, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::L, 2, Rotation::CW), getSRSKickData(PieceType::L, 2, Rotation::CCW), getSRSKickData(PieceType::L, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::L, 3, Rotation::CW), getSRSKickData(PieceType::L, 3, Rotation::CCW), getSRSKickData(PieceType::L, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::O, 0, Rotation::CW), getSRSKickData(BlockType::O, 0, Rotation::CCW), getSRSKickData(BlockType::O, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::O, 1, Rotation::CW), getSRSKickData(BlockType::O, 1, Rotation::CCW), getSRSKickData(BlockType::O, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::O, 2, Rotation::CW), getSRSKickData(BlockType::O, 2, Rotation::CCW), getSRSKickData(BlockType::O, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::O, 3, Rotation::CW), getSRSKickData(BlockType::O, 3, Rotation::CCW), getSRSKickData(BlockType::O, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::O, 0, Rotation::CW), getSRSKickData(PieceType::O, 0, Rotation::CCW), getSRSKickData(PieceType::O, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::O, 1, Rotation::CW), getSRSKickData(PieceType::O, 1, Rotation::CCW), getSRSKickData(PieceType::O, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::O, 2, Rotation::CW), getSRSKickData(PieceType::O, 2, Rotation::CCW), getSRSKickData(PieceType::O, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::O, 3, Rotation::CW), getSRSKickData(PieceType::O, 3, Rotation::CCW), getSRSKickData(PieceType::O, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::S, 0, Rotation::CW), getSRSKickData(BlockType::S, 0, Rotation::CCW), getSRSKickData(BlockType::S, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::S, 1, Rotation::CW), getSRSKickData(BlockType::S, 1, Rotation::CCW), getSRSKickData(BlockType::S, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::S, 2, Rotation::CW), getSRSKickData(BlockType::S, 2, Rotation::CCW), getSRSKickData(BlockType::S, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::S, 3, Rotation::CW), getSRSKickData(BlockType::S, 3, Rotation::CCW), getSRSKickData(BlockType::S, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::S, 0, Rotation::CW), getSRSKickData(PieceType::S, 0, Rotation::CCW), getSRSKickData(PieceType::S, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::S, 1, Rotation::CW), getSRSKickData(PieceType::S, 1, Rotation::CCW), getSRSKickData(PieceType::S, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::S, 2, Rotation::CW), getSRSKickData(PieceType::S, 2, Rotation::CCW), getSRSKickData(PieceType::S, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::S, 3, Rotation::CW), getSRSKickData(PieceType::S, 3, Rotation::CCW), getSRSKickData(PieceType::S, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::I, 0, Rotation::CW), getSRSKickData(BlockType::I, 0, Rotation::CCW), getSRSKickData(BlockType::I, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::I, 1, Rotation::CW), getSRSKickData(BlockType::I, 1, Rotation::CCW), getSRSKickData(BlockType::I, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::I, 2, Rotation::CW), getSRSKickData(BlockType::I, 2, Rotation::CCW), getSRSKickData(BlockType::I, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::I, 3, Rotation::CW), getSRSKickData(BlockType::I, 3, Rotation::CCW), getSRSKickData(BlockType::I, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::I, 0, Rotation::CW), getSRSKickData(PieceType::I, 0, Rotation::CCW), getSRSKickData(PieceType::I, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::I, 1, Rotation::CW), getSRSKickData(PieceType::I, 1, Rotation::CCW), getSRSKickData(PieceType::I, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::I, 2, Rotation::CW), getSRSKickData(PieceType::I, 2, Rotation::CCW), getSRSKickData(PieceType::I, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::I, 3, Rotation::CW), getSRSKickData(PieceType::I, 3, Rotation::CCW), getSRSKickData(PieceType::I, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::J, 0, Rotation::CW), getSRSKickData(BlockType::J, 0, Rotation::CCW), getSRSKickData(BlockType::J, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::J, 1, Rotation::CW), getSRSKickData(BlockType::J, 1, Rotation::CCW), getSRSKickData(BlockType::J, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::J, 2, Rotation::CW), getSRSKickData(BlockType::J, 2, Rotation::CCW), getSRSKickData(BlockType::J, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::J, 3, Rotation::CW), getSRSKickData(BlockType::J, 3, Rotation::CCW), getSRSKickData(BlockType::J, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::J, 0, Rotation::CW), getSRSKickData(PieceType::J, 0, Rotation::CCW), getSRSKickData(PieceType::J, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::J, 1, Rotation::CW), getSRSKickData(PieceType::J, 1, Rotation::CCW), getSRSKickData(PieceType::J, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::J, 2, Rotation::CW), getSRSKickData(PieceType::J, 2, Rotation::CCW), getSRSKickData(PieceType::J, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::J, 3, Rotation::CW), getSRSKickData(PieceType::J, 3, Rotation::CCW), getSRSKickData(PieceType::J, 3, Rotation::HALF)}
     },{
-        {getSRSKickData(BlockType::T, 0, Rotation::CW), getSRSKickData(BlockType::T, 0, Rotation::CCW), getSRSKickData(BlockType::T, 0, Rotation::HALF)},
-        {getSRSKickData(BlockType::T, 1, Rotation::CW), getSRSKickData(BlockType::T, 1, Rotation::CCW), getSRSKickData(BlockType::T, 1, Rotation::HALF)},
-        {getSRSKickData(BlockType::T, 2, Rotation::CW), getSRSKickData(BlockType::T, 2, Rotation::CCW), getSRSKickData(BlockType::T, 2, Rotation::HALF)},
-        {getSRSKickData(BlockType::T, 3, Rotation::CW), getSRSKickData(BlockType::T, 3, Rotation::CCW), getSRSKickData(BlockType::T, 3, Rotation::HALF)}
+        {getSRSKickData(PieceType::T, 0, Rotation::CW), getSRSKickData(PieceType::T, 0, Rotation::CCW), getSRSKickData(PieceType::T, 0, Rotation::HALF)},
+        {getSRSKickData(PieceType::T, 1, Rotation::CW), getSRSKickData(PieceType::T, 1, Rotation::CCW), getSRSKickData(PieceType::T, 1, Rotation::HALF)},
+        {getSRSKickData(PieceType::T, 2, Rotation::CW), getSRSKickData(PieceType::T, 2, Rotation::CCW), getSRSKickData(PieceType::T, 2, Rotation::HALF)},
+        {getSRSKickData(PieceType::T, 3, Rotation::CW), getSRSKickData(PieceType::T, 3, Rotation::CCW), getSRSKickData(PieceType::T, 3, Rotation::HALF)}
     },
 };
 
@@ -213,7 +213,7 @@ struct SevenBagPermutations {
 };
 inline static SevenBagPermutations generateSevenBagPermutations() {
     SevenBagPermutations permutations;
-    BlockType next[] = { BlockType::Z, BlockType::L, BlockType::O, BlockType::S, BlockType::I, BlockType::J, BlockType::T };
+    PieceType next[] = { PieceType::Z, PieceType::L, PieceType::O, PieceType::S, PieceType::I, PieceType::J, PieceType::T };
     int index = 0;
     do {
         auto& ref = permutations.data[index++];
@@ -229,16 +229,16 @@ inline static SevenBagPermutations generateSevenBagPermutations() {
     return permutations;
 }
 
-inline static void randomBlocks(BlockType dest[], std::uint32_t& seed) {
+inline static void randomPieces(PieceType dest[], std::uint32_t& seed) {
     static const SevenBagPermutations seven_bag_permutations = generateSevenBagPermutations();
     auto& ref = seven_bag_permutations.data[xorshf32(seed) % SevenBagPermutations::SIZE];
-    dest[0] = static_cast<BlockType>(ref.b0);
-    dest[1] = static_cast<BlockType>(ref.b1);
-    dest[2] = static_cast<BlockType>(ref.b2);
-    dest[3] = static_cast<BlockType>(ref.b3);
-    dest[4] = static_cast<BlockType>(ref.b4);
-    dest[5] = static_cast<BlockType>(ref.b5);
-    dest[6] = static_cast<BlockType>(ref.b6);
+    dest[0] = static_cast<PieceType>(ref.b0);
+    dest[1] = static_cast<PieceType>(ref.b1);
+    dest[2] = static_cast<PieceType>(ref.b2);
+    dest[3] = static_cast<PieceType>(ref.b3);
+    dest[4] = static_cast<PieceType>(ref.b4);
+    dest[5] = static_cast<PieceType>(ref.b5);
+    dest[6] = static_cast<PieceType>(ref.b6);
 }
 
 inline static void initializeBoard(Board& board) {
@@ -250,8 +250,8 @@ inline static void initializeBoard(Board& board) {
 
 // returns {is_tspin, is_mini_tspin}
 inline static std::pair<bool, bool> isTspin(State* state) {
-    if (state->current != BlockType::T || !state->was_last_rotation) { return {false, false}; }
-    // check corners around the T block
+    if (state->current != PieceType::T || !state->was_last_rotation) { return {false, false}; }
+    // check corners around the T piece
     // |0# | #1| # | # |
     // |###|###|###|###|
     // |   |   |2  |  3|
@@ -279,19 +279,19 @@ inline static std::pair<bool, bool> isTspin(State* state) {
     return {true, is_mini};
 }
 inline static bool isAllSpin(State* state) {
-    if (state->current == BlockType::T || !state->was_last_rotation) { return false; }
-    auto& block = ops::getBlock(state->current, state->orientation);
+    if (state->current == PieceType::T || !state->was_last_rotation) { return false; }
+    auto& piece = ops::getPiece(state->current, state->orientation);
     // check all-spin (piece cannot move left, right, up or down)
     bool collisions[4] = {
-        !ops::canPlaceBlock(state->board, block, state->x - 1, state->y), // left
-        !ops::canPlaceBlock(state->board, block, state->x + 1, state->y), // right
-        !ops::canPlaceBlock(state->board, block, state->x, state->y - 1), // up
-        !ops::canPlaceBlock(state->board, block, state->x, state->y + 1), // down
+        !ops::canPlacePiece(state->board, piece, state->x - 1, state->y), // left
+        !ops::canPlacePiece(state->board, piece, state->x + 1, state->y), // right
+        !ops::canPlacePiece(state->board, piece, state->x, state->y - 1), // up
+        !ops::canPlacePiece(state->board, piece, state->x, state->y + 1), // down
     };
     return collisions[0] && collisions[1] && collisions[2] && collisions[3];
 }
 inline static SpinType getSpinType(State* state) {
-    if (state->current == BlockType::T) {
+    if (state->current == PieceType::T) {
         auto [is_tspin, is_mini] = isTspin(state);
         if (is_tspin) { return is_mini ? SpinType::SPIN_MINI : SpinType::SPIN; }
     } else if (isAllSpin(state)) {
@@ -299,9 +299,9 @@ inline static SpinType getSpinType(State* state) {
     }
     return SpinType::NONE;
 }
-inline static bool isBackToBackSpinType(BlockType block_type, SpinType spin_type) {
+inline static bool isBackToBackSpinType(PieceType piece_type, SpinType spin_type) {
     // current ruleset: tspin only
-    if (block_type != BlockType::T) { return false; }
+    if (piece_type != PieceType::T) { return false; }
     if (spin_type == SpinType::SPIN || spin_type == SpinType::SPIN_MINI) { return true; }
     return false;
 }
@@ -323,8 +323,8 @@ inline static int calculateAttack(const State* state) {
     // |                    |            ||      11 |          4 |
     // |                    |            ||     12+ |          5 |
     if (state->lines_cleared == 0) { return 0; }
-    bool is_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN;
-    bool is_mini_tspin = state->current == BlockType::T && state->spin_type == SpinType::SPIN_MINI;
+    bool is_tspin = state->current == PieceType::T && state->spin_type == SpinType::SPIN;
+    bool is_mini_tspin = state->current == PieceType::T && state->spin_type == SpinType::SPIN_MINI;
     bool is_b2b = state->back_to_back_count > 0;
     // --- Base attack ---
     int base = 0;
@@ -465,9 +465,9 @@ inline static std::uint16_t clearLines(State* state) {
     return static_cast<std::uint16_t>(count);
 }
 inline static void processPiecePlacement(State* state) {
-    // place the current block on the board
-    auto& block = ops::getBlock(state->current, state->orientation);
-    ops::placeBlock(state->board, block, state->x, state->y);
+    // place the current piece on the board
+    auto& piece = ops::getPiece(state->current, state->orientation);
+    ops::placePiece(state->board, piece, state->x, state->y);
     // clear lines and update state
     state->lines_cleared = clearLines(state);
     state->total_lines_cleared += state->lines_cleared;
@@ -501,28 +501,28 @@ inline static void processPiecePlacement(State* state) {
     state->total_attack += static_cast<std::uint32_t>(attack);
     state->total_lines_sent += static_cast<std::uint32_t>(lines_sent);
 }
-inline static BlockType fetchNextBlock(State* state) {
-    BlockType next_block = state->next[0];
-    // shift the next blocks
+inline static PieceType fetchNextPiece(State* state) {
+    PieceType next_piece = state->next[0];
+    // shift the next pieces
     for (int i = 0; i < 13; i++) { state->next[i] = state->next[i + 1]; }
-    state->next[13] = BlockType::NONE;
-    // generate new random blocks if needed
-    if (state->next[7] == BlockType::NONE) { randomBlocks(state->next + 7, state->seed); }
-    return next_block;
+    state->next[13] = PieceType::NONE;
+    // generate new random pieces if needed
+    if (state->next[7] == PieceType::NONE) { randomPieces(state->next + 7, state->seed); }
+    return next_piece;
 }
-inline static bool newCurrentBlock(State* state, BlockType block_type) {
-    // set new current block
-    state->current = block_type;
+inline static bool newCurrentPiece(State* state, PieceType piece_type) {
+    // set new current piece
+    state->current = piece_type;
     state->orientation = 0;
-    state->x = BLOCK_SPAWN_X;
-    state->y = BLOCK_SPAWN_Y;
-    // reset state for new block
+    state->x = PIECE_SPAWN_X;
+    state->y = PIECE_SPAWN_Y;
+    // reset state for new piece
     state->srs_index = -1;
     state->was_last_rotation = false;
     // state->spin_type = SpinType::NONE; // postpone for tracking last spin type
-    // spawn the new block
-    auto& block = ops::getBlock(state->current, state->orientation);
-    bool can_place = ops::canPlaceBlock(state->board, block, state->x, state->y);
+    // spawn the new piece
+    auto& piece = ops::getPiece(state->current, state->orientation);
+    bool can_place = ops::canPlacePiece(state->board, piece, state->x, state->y);
     // Top out rule (https://tetris.wiki/Top_out)
     if (!can_place) {
         state->is_alive = false;
@@ -531,30 +531,30 @@ inline static bool newCurrentBlock(State* state, BlockType block_type) {
     return true;
 }
 
-inline static bool moveBlock(State* state, int new_x, int new_y) {
-    auto& block = ops::getBlock(state->current, state->orientation);
-    bool can_place = ops::canPlaceBlock(state->board, block, new_x, new_y);
+inline static bool movePiece(State* state, int new_x, int new_y) {
+    auto& piece = ops::getPiece(state->current, state->orientation);
+    bool can_place = ops::canPlacePiece(state->board, piece, new_x, new_y);
     if (can_place) {
         state->x = static_cast<std::int8_t>(new_x);
         state->y = static_cast<std::int8_t>(new_y);
     }
     return can_place;
 }
-inline static bool rotateBlock(State* state, Rotation rot) {
+inline static bool rotatePiece(State* state, Rotation rot) {
     constexpr std::uint8_t orientation_delta_table[static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)] = {
         1, // CW  -> orientation + 1
         3, // CCW -> orientation - 1 (= +3 mod 4)
         2, // 180 -> orientation + 2
     };
     const std::uint8_t new_orientation = (state->orientation + orientation_delta_table[static_cast<std::underlying_type_t<Rotation>>(rot)]) % 4;
-    auto& new_block = ops::getBlock(state->current, new_orientation);
+    auto& new_piece = ops::getPiece(state->current, new_orientation);
     // SRS kicks for CW/CCW/180
-    auto& [kicks, len] = srs_table[static_cast<std::underlying_type_t<BlockType>>(state->current)][state->orientation][static_cast<std::underlying_type_t<Rotation>>(rot)];
+    auto& [kicks, len] = srs_table[static_cast<std::underlying_type_t<PieceType>>(state->current)][state->orientation][static_cast<std::underlying_type_t<Rotation>>(rot)];
     // try SRS kicks
     for (int i = 0; i < len; ++i) {
         const int test_x = state->x + kicks[i].x;
         const int test_y = state->y - kicks[i].y;
-        if (ops::canPlaceBlock(state->board, new_block, test_x, test_y)) {
+        if (ops::canPlacePiece(state->board, new_piece, test_x, test_y)) {
             // commit rotation + kick
             state->orientation = new_orientation;
             state->x = static_cast<std::int8_t>(test_x);
@@ -574,11 +574,11 @@ void setSeed(State* state, std::uint32_t seed, std::uint32_t garbage_seed) {
 void reset(State* state) {
     initializeBoard(state->board);
     state->is_alive = true;
-    randomBlocks(state->next, state->seed);
-    randomBlocks(state->next + 7, state->seed);
-    state->hold = BlockType::NONE;
+    randomPieces(state->next, state->seed);
+    randomPieces(state->next + 7, state->seed);
+    state->hold = PieceType::NONE;
     state->has_held = false;
-    state->current = BlockType::NONE;
+    state->current = PieceType::NONE;
     state->orientation = 0;
     state->x = -1;
     state->y = -1;
@@ -599,9 +599,9 @@ void reset(State* state) {
     // initialize garbage queues
     std::fill(std::begin(state->garbage_queue), std::end(state->garbage_queue), 0);
     std::fill(std::begin(state->garbage_delay), std::end(state->garbage_delay), 0);
-    // spawn current block
-    BlockType next_block = fetchNextBlock(state);
-    newCurrentBlock(state, next_block);
+    // spawn current piece
+    PieceType next_piece = fetchNextPiece(state);
+    newCurrentPiece(state, next_piece);
 }
 
 // reset output fields from the last piece placement
@@ -614,7 +614,7 @@ inline static void clearLastPlacementResult(State* state) {
 
 bool moveLeft(State* state) {
     clearLastPlacementResult(state);
-    bool moved = moveBlock(state, state->x - 1, state->y);
+    bool moved = movePiece(state, state->x - 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -623,7 +623,7 @@ bool moveLeft(State* state) {
 }
 bool moveRight(State* state) {
     clearLastPlacementResult(state);
-    bool moved = moveBlock(state, state->x + 1, state->y);
+    bool moved = movePiece(state, state->x + 1, state->y);
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -633,7 +633,7 @@ bool moveRight(State* state) {
 bool moveLeftToWall(State* state) {
     clearLastPlacementResult(state);
     bool moved = false;
-    while (moveBlock(state, state->x - 1, state->y)) { moved = true; }
+    while (movePiece(state, state->x - 1, state->y)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -643,7 +643,7 @@ bool moveLeftToWall(State* state) {
 bool moveRightToWall(State* state) {
     clearLastPlacementResult(state);
     bool moved = false;
-    while (moveBlock(state, state->x + 1, state->y)) { moved = true; }
+    while (movePiece(state, state->x + 1, state->y)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -652,7 +652,7 @@ bool moveRightToWall(State* state) {
 }
 bool softDrop(State* state) {
     clearLastPlacementResult(state);
-    bool moved = moveBlock(state, state->x, state->y + 1);
+    bool moved = movePiece(state, state->x, state->y + 1);
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -662,7 +662,7 @@ bool softDrop(State* state) {
 bool softDropToFloor(State* state) {
     clearLastPlacementResult(state);
     bool moved = false;
-    while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
+    while (movePiece(state, state->x, state->y + 1)) { moved = true; }
     if (moved) {
         state->was_last_rotation = false;
         state->spin_type = SpinType::NONE;
@@ -671,12 +671,12 @@ bool softDropToFloor(State* state) {
 }
 bool hardDrop(State* state) {
     bool moved = false;
-    while (moveBlock(state, state->x, state->y + 1)) { moved = true; }
+    while (movePiece(state, state->x, state->y + 1)) { moved = true; }
     if (moved) { state->was_last_rotation = false; }
     state->spin_type = getSpinType(state); // TODO: remove redundant check
     processPiecePlacement(state);
-    BlockType next_block = fetchNextBlock(state);
-    if (newCurrentBlock(state, next_block)) {
+    PieceType next_piece = fetchNextPiece(state);
+    if (newCurrentPiece(state, next_piece)) {
         state->has_held = false;
         return true;
     }
@@ -684,7 +684,7 @@ bool hardDrop(State* state) {
 }
 bool rotateCounterclockwise(State* state) {
     clearLastPlacementResult(state);
-    bool moved = rotateBlock(state, Rotation::CCW);
+    bool moved = rotatePiece(state, Rotation::CCW);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
@@ -693,7 +693,7 @@ bool rotateCounterclockwise(State* state) {
 }
 bool rotateClockwise(State* state) {
     clearLastPlacementResult(state);
-    bool moved = rotateBlock(state, Rotation::CW);
+    bool moved = rotatePiece(state, Rotation::CW);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
@@ -702,7 +702,7 @@ bool rotateClockwise(State* state) {
 }
 bool rotate180(State* state) {
     clearLastPlacementResult(state);
-    bool moved = rotateBlock(state, Rotation::HALF);
+    bool moved = rotatePiece(state, Rotation::HALF);
     if (moved) {
         state->was_last_rotation = true;
         state->spin_type = getSpinType(state);
@@ -712,15 +712,15 @@ bool rotate180(State* state) {
 bool hold(State* state) {
     clearLastPlacementResult(state);
     if (state->has_held) { return false; }
-    // reset state for new block (TODO: remove redundancy with newCurrentBlock)
+    // reset state for new piece (TODO: remove redundancy with newCurrentPiece)
     state->was_last_rotation = false;
     state->spin_type = SpinType::NONE;
-    // hold current block
-    BlockType new_block = state->hold != BlockType::NONE ? state->hold : fetchNextBlock(state);
+    // hold current piece
+    PieceType new_piece = state->hold != PieceType::NONE ? state->hold : fetchNextPiece(state);
     state->hold = state->current;
     state->has_held = true;
-    // setup new current block
-    newCurrentBlock(state, new_block);
+    // setup new current piece
+    newCurrentPiece(state, new_piece);
     return true;
 }
 bool noop(State* state) {
@@ -789,12 +789,12 @@ void toString(State* state, char* buf, std::size_t size) {
     // symbols for representing pending garbage with different delays (0-9, A-Z, then *)
     static constexpr char pending_garbage_symbols[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ*";
     static constexpr int pending_garbage_symbol_size = sizeof(pending_garbage_symbols) - 1; // exclude null terminator
-    // some blocks are shifted half a cell to the right in the string representation to look better (since the string cells are twice as wide as the board cells)
+    // some pieces are shifted half a cell to the right in the string representation to look better (since the string cells are twice as wide as the board cells)
     static constexpr bool half_shift[] = {
         // Z,    L,     O,    S,     I,    J,    T
         true, true, false, true, false, true, true
     };
-    // helper functions for drawing the board and blocks into the string layout
+    // helper functions for drawing the board and pieces into the string layout
     static constexpr auto drawStringCell = [](StringLayout& sl, int string_x, int string_y, StringCell string_cell, bool half_shift = false) {
         if (string_x >= 0 && string_x < STRING_BOARD_WIDTH && string_y >= 0 && string_y < STRING_BOARD_HEIGHT) {
             auto target_cell = &sl.board[string_y][string_x * 2 + half_shift];
@@ -802,24 +802,24 @@ void toString(State* state, char* buf, std::size_t size) {
             target_cell[1] = string_cell.right;
         }
     };
-    static constexpr auto drawBlock = [](StringLayout& sl, int string_x, int string_y, BlockType block_type, std::uint8_t orientation, bool half_shift = false, StringCell string_cell = {'[', ']'}) {
-        auto& block = ops::getBlock(block_type, orientation);
-        // put 4x4 block shape into the string layout
+    static constexpr auto drawPiece = [](StringLayout& sl, int string_x, int string_y, PieceType piece_type, std::uint8_t orientation, bool half_shift = false, StringCell string_cell = {'[', ']'}) {
+        auto& piece = ops::getPiece(piece_type, orientation);
+        // put 4x4 piece shape into the string layout
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                if (ops::getCell(block, j, i) == Cell::EMPTY) { continue; }
+                if (ops::getCell(piece, j, i) == Cell::EMPTY) { continue; }
                 drawStringCell(sl, string_x + j, string_y + i, string_cell, half_shift);
             }
         }
     };
-    static constexpr auto drawHold = [](StringLayout& sl, BlockType hold) {
-        if (hold == BlockType::NONE) { return; }
-        drawBlock(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(hold)]);
+    static constexpr auto drawHold = [](StringLayout& sl, PieceType hold) {
+        if (hold == PieceType::NONE) { return; }
+        drawPiece(sl, STRING_HOLD_X, STRING_HOLD_Y, hold, 0, half_shift[static_cast<std::underlying_type_t<PieceType>>(hold)]);
     };
-    static constexpr auto drawNext = [](StringLayout& sl, const BlockType* next) {
+    static constexpr auto drawNext = [](StringLayout& sl, const PieceType* next) {
         for (int i = 0; i < 5; ++i) {
-            if (next[i] == BlockType::NONE) { break; }
-            drawBlock(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::underlying_type_t<BlockType>>(next[i])]);
+            if (next[i] == PieceType::NONE) { break; }
+            drawPiece(sl, STRING_NEXT_X, STRING_NEXT_Y + i * STRING_NEXT_SPACING, next[i], 0, half_shift[static_cast<std::underlying_type_t<PieceType>>(next[i])]);
         }
     };
     static constexpr auto drawPendingGarbageQueue = [](StringLayout& sl, std::uint8_t garbage_queue[], std::uint8_t garbage_delay[]) {
@@ -839,9 +839,9 @@ void toString(State* state, char* buf, std::size_t size) {
     // view buf as StringLayout
     StringLayout* sl = reinterpret_cast<StringLayout*>(buf);
     // calculate shadow position
-    auto& block = ops::getBlock(state->current, state->orientation);
+    auto& piece = ops::getPiece(state->current, state->orientation);
     int shadow_y = state->y;
-    while (ops::canPlaceBlock(state->board, block, state->x, shadow_y + 1)) {
+    while (ops::canPlacePiece(state->board, piece, state->x, shadow_y + 1)) {
         shadow_y++;
     }
     // copy the initial board layout
@@ -862,23 +862,23 @@ void toString(State* state, char* buf, std::size_t size) {
             drawStringCell(*sl, string_x, string_y, string_cell);
         }
     }
-    // draw shadow block
+    // draw shadow piece
     int shadow_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
     int shadow_string_y = shadow_y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
-    drawBlock(*sl, shadow_string_x, shadow_string_y, state->current, state->orientation, false, {':', ':'});
-    // draw current block
+    drawPiece(*sl, shadow_string_x, shadow_string_y, state->current, state->orientation, false, {':', ':'});
+    // draw current piece
     int current_string_x = state->x - BOARD_LEFT + STRING_BOARD_LEFT;
     int current_string_y = state->y - (BOARD_TOP - 1) + STRING_BOARD_TOP;
-    drawBlock(*sl, current_string_x, current_string_y, state->current, state->orientation);
-    // draw hold and next blocks
+    drawPiece(*sl, current_string_x, current_string_y, state->current, state->orientation);
+    // draw hold and next pieces
     drawHold(*sl, state->hold);
     drawNext(*sl, state->next);
     // draw pending garbage queue
     drawPendingGarbageQueue(*sl, state->garbage_queue, state->garbage_delay);
 }
 
-void placeCurrentBlock(State* state) { ops::placeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
-void removeCurrentBlock(State* state) { ops::removeBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
-bool canPlaceCurrentBlock(State* state) { return ops::canPlaceBlock(state->board, ops::getBlock(state->current, state->orientation), state->x, state->y); }
+void placeCurrentPiece(State* state) { ops::placePiece(state->board, ops::getPiece(state->current, state->orientation), state->x, state->y); }
+void removeCurrentPiece(State* state) { ops::removePiece(state->board, ops::getPiece(state->current, state->orientation), state->x, state->y); }
+bool canPlaceCurrentPiece(State* state) { return ops::canPlacePiece(state->board, ops::getPiece(state->current, state->orientation), state->x, state->y); }
 
 } // namespace tetrl

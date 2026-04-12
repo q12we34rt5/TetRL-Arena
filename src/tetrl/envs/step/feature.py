@@ -86,8 +86,8 @@ class CppFeature(FeaturePlugin):
     """Feature plugin backed by JIT-compiled C++ code.
 
     ``tetris.cpp`` and ``step.hpp`` are compiled together with the user
-    source, so all engine types/functions (``State``, ``removeCurrentBlock``,
-    ``placeCurrentBlock``, ...) **and** step-env types (``Info``,
+    source, so all engine types/functions (``State``, ``removeCurrentPiece``,
+    ``placeCurrentPiece``, ...) **and** step-env types (``Info``,
     ``Action``, ...) are available without additional includes.
 
     Required C++ functions

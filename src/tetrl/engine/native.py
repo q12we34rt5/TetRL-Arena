@@ -53,9 +53,9 @@ API uint8_t  api_addGarbage            (State* s, std::uint8_t lines, std::uint8
 
 API void     api_toString              (State* s, char* buf, std::uint64_t size) { toString(s, buf, static_cast<std::size_t>(size)); }
 
-API void     api_placeCurrentBlock     (State* s) { placeCurrentBlock(s); }
-API void     api_removeCurrentBlock    (State* s) { removeCurrentBlock(s); }
-API uint8_t  api_canPlaceCurrentBlock  (State* s) { return canPlaceCurrentBlock(s); }
+API void     api_placeCurrentPiece     (State* s) { placeCurrentPiece(s); }
+API void     api_removeCurrentPiece    (State* s) { removeCurrentPiece(s); }
+API uint8_t  api_canPlaceCurrentPiece  (State* s) { return canPlaceCurrentPiece(s); }
 """
 )
 
@@ -90,9 +90,9 @@ _lib.compile_string(
         "api_noop": {"argtypes": [dl.void_p], "restype": dl.uint8},
         "api_addGarbage": {"argtypes": [dl.void_p, dl.uint8, dl.uint8], "restype": dl.uint8},
         "api_toString": {"argtypes": [dl.void_p, dl.void_p, dl.uint64], "restype": dl.void},
-        "api_placeCurrentBlock": {"argtypes": [dl.void_p], "restype": dl.void},
-        "api_removeCurrentBlock": {"argtypes": [dl.void_p], "restype": dl.void},
-        "api_canPlaceCurrentBlock": {"argtypes": [dl.void_p], "restype": dl.uint8},
+        "api_placeCurrentPiece": {"argtypes": [dl.void_p], "restype": dl.void},
+        "api_removeCurrentPiece": {"argtypes": [dl.void_p], "restype": dl.void},
+        "api_canPlaceCurrentPiece": {"argtypes": [dl.void_p], "restype": dl.uint8},
     },
 )
 
@@ -185,16 +185,16 @@ def to_string(state: State) -> str:
     return buf.value.decode()
 
 
-def place_current_block(state: State) -> None:
+def place_current_piece(state: State) -> None:
     """Stamp the current piece onto the board (without locking)."""
-    _lib.api_placeCurrentBlock(ctypes.addressof(state))
+    _lib.api_placeCurrentPiece(ctypes.addressof(state))
 
 
-def remove_current_block(state: State) -> None:
+def remove_current_piece(state: State) -> None:
     """Erase the current piece from the board."""
-    _lib.api_removeCurrentBlock(ctypes.addressof(state))
+    _lib.api_removeCurrentPiece(ctypes.addressof(state))
 
 
-def can_place_current_block(state: State) -> bool:
+def can_place_current_piece(state: State) -> bool:
     """Return ``True`` if the current piece fits at its current position."""
-    return bool(_lib.api_canPlaceCurrentBlock(ctypes.addressof(state)))
+    return bool(_lib.api_canPlaceCurrentPiece(ctypes.addressof(state)))

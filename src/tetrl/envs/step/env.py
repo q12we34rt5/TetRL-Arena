@@ -79,8 +79,8 @@ class StepEnv(gymnasium.Env):
         ``None``, uses :func:`~tetrl.envs.step.defaults.default_reward`
         (lock-based attack shaping).
     config:
-        Engine configuration (block lifetime, auto-drop gravity).
-        Defaults to ``StepEnvConfig()`` (``block_life=20, auto_drop=True``).
+        Engine configuration (piece lifetime, auto-drop gravity).
+        Defaults to ``StepEnvConfig()`` (``piece_life=20, auto_drop=True``).
     max_steps:
         If positive, the episode is *truncated* after this many steps
         (the ``truncated`` flag is set but ``terminated`` stays ``False``).

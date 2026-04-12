@@ -63,22 +63,22 @@ class StepEnvConfig(ctypes.Structure):
 
     Parameters
     ----------
-    block_life:
+    piece_life:
         Number of steps before the engine forces a hard-drop (default 20).
     auto_drop:
         If non-zero, a ``softDrop`` is simulated every step (gravity).
     """
 
     _fields_ = [
-        ("block_life", ctypes.c_int32),
+        ("piece_life", ctypes.c_int32),
         ("auto_drop", ctypes.c_uint8),
     ]
 
-    def __init__(self, block_life: int = 20, auto_drop: bool = True) -> None:
-        super().__init__(block_life=block_life, auto_drop=int(auto_drop))
+    def __init__(self, piece_life: int = 20, auto_drop: bool = True) -> None:
+        super().__init__(piece_life=piece_life, auto_drop=int(auto_drop))
 
     def __repr__(self) -> str:
-        return f"StepEnvConfig(block_life={self.block_life}, auto_drop={bool(self.auto_drop)})"
+        return f"StepEnvConfig(piece_life={self.piece_life}, auto_drop={bool(self.auto_drop)})"
 
 
 class StepEnvContext(ctypes.Structure):

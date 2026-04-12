@@ -49,7 +49,7 @@ You can also construct the environment directly:
 from tetrl.envs.step import StepEnv, StepEnvConfig
 
 env = StepEnv(
-    config=StepEnvConfig(block_life=20, auto_drop=True),
+    config=StepEnvConfig(piece_life=20, auto_drop=True),
     render_mode="ansi",
 )
 ```

@@ -32,7 +32,7 @@ struct Info {
 };
 
 struct Config {
-    std::int32_t            block_life = 20; // steps before forced hard drop
+    std::int32_t            piece_life = 20; // steps before forced hard drop
     std::uint8_t /* bool */ auto_drop  = 1;  // simulate gravity each step (bool)
 };
 
@@ -52,7 +52,7 @@ inline void setSeed(Context* ctx, std::uint32_t seed, std::uint32_t garbage_seed
 
 inline void reset(Context* ctx) {
     reset(&ctx->state);
-    ctx->lifetime = ctx->config.block_life;
+    ctx->lifetime = ctx->config.piece_life;
 }
 
 inline Info step(Context* ctx, Action action) {
@@ -120,11 +120,11 @@ inline Info step(Context* ctx, Action action) {
     }
     // lifetime management
     if (lifetime_reset) {
-        ctx->lifetime = ctx->config.block_life;
+        ctx->lifetime = ctx->config.piece_life;
     } else {
         ctx->lifetime--;
         if (ctx->lifetime <= 0 && ctx->state.is_alive) {
-            ctx->lifetime = ctx->config.block_life;
+            ctx->lifetime = ctx->config.piece_life;
             // force hard drop when lifetime expires
             hardDrop(&ctx->state);
             info.forced_hard_drop = true;

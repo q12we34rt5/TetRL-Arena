@@ -15,8 +15,8 @@ constexpr int BOARD_RIGHT   = 12;   // last playfield column
 
 constexpr int BOARD_FLOOR   = BOARD_HEIGHT - BOARD_BOTTOM - 1;  // floor wall thickness
 
-constexpr int BLOCK_SPAWN_X = BOARD_LEFT + 3;
-constexpr int BLOCK_SPAWN_Y = BOARD_TOP - 1;
+constexpr int PIECE_SPAWN_X = BOARD_LEFT + 3;
+constexpr int PIECE_SPAWN_Y = BOARD_TOP - 1;
 
 constexpr int GARBAGE_QUEUE_SIZE = 20;
 
@@ -27,7 +27,7 @@ struct Rows {
     Row data[N];
 };
 using Board = Rows<BOARD_HEIGHT>;
-using Block = Rows<4>;
+using Piece = Rows<4>;
 
 /**
  * Cell encoding (2 bits per cell):
@@ -72,13 +72,13 @@ constexpr Row ROW_EMPTY   = mkrow("BBB..........BBB");  // walls + empty row
 constexpr Row ROW_FULL    = mkrow("BBBBBBBBBBBBBBBB");  // walls + full row
 constexpr Row ROW_GARBAGE = mkrow("BBBGGGGGGGGGGBBB");  // walls + full garbage row
 
-enum class BlockType : std::int8_t {
+enum class PieceType : std::int8_t {
     NONE = -1,
     Z = 0, L, O, S, I, J, T,
     SIZE
 };
 
-constexpr Block blocks[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4] = {{
+constexpr Piece pieces[static_cast<std::underlying_type_t<PieceType>>(PieceType::SIZE)][4] = {{
     {mkrow("BB  "),
      mkrow(" BB "),
      mkrow("    "),
@@ -202,10 +202,10 @@ enum class SpinType : std::uint8_t {
 struct State {
     Board board;
     std::uint8_t /* bool */ is_alive;
-    BlockType next[14];
-    BlockType hold;
+    PieceType next[14];
+    PieceType hold;
     std::uint8_t /* bool */ has_held;
-    BlockType current;
+    PieceType current;
     std::uint8_t orientation;
     std::int8_t x, y;
     std::uint32_t seed;
@@ -245,7 +245,7 @@ enum class Rotation : std::uint8_t {
     SIZE
 };
 
-extern const SRSKickData srs_table[static_cast<std::underlying_type_t<BlockType>>(BlockType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)];
+extern const SRSKickData srs_table[static_cast<std::underlying_type_t<PieceType>>(PieceType::SIZE)][4][static_cast<std::underlying_type_t<Rotation>>(Rotation::SIZE)];
 
 namespace ops {
 
@@ -294,10 +294,10 @@ inline constexpr bool canPlaceRows(const Board& board, const Rows<N>& rows, int 
     return true;
 }
 
-inline constexpr const Block& getBlock(BlockType type, std::uint8_t orientation) { return blocks[static_cast<std::underlying_type_t<BlockType>>(type)][orientation]; }
-inline constexpr void placeBlock(Board& board, const Block& block, int x, int y) { placeRows(board, block, x, y); }
-inline constexpr void removeBlock(Board& board, const Block& block, int x, int y) { removeRows(board, block, x, y); }
-inline constexpr bool canPlaceBlock(const Board& board, const Block& block, int x, int y) { return canPlaceRows(board, block, x, y); }
+inline constexpr const Piece& getPiece(PieceType type, std::uint8_t orientation) { return pieces[static_cast<std::underlying_type_t<PieceType>>(type)][orientation]; }
+inline constexpr void placePiece(Board& board, const Piece& piece, int x, int y) { placeRows(board, piece, x, y); }
+inline constexpr void removePiece(Board& board, const Piece& piece, int x, int y) { removeRows(board, piece, x, y); }
+inline constexpr bool canPlacePiece(const Board& board, const Piece& piece, int x, int y) { return canPlaceRows(board, piece, x, y); }
 
 } // namespace ops
 
@@ -322,8 +322,8 @@ bool addGarbage(State* state, std::uint8_t lines, std::uint8_t delay);
 
 void toString(State* state, char* buf, std::size_t size);
 
-void placeCurrentBlock(State* state);
-void removeCurrentBlock(State* state);
-bool canPlaceCurrentBlock(State* state);
+void placeCurrentPiece(State* state);
+void removeCurrentPiece(State* state);
+bool canPlaceCurrentPiece(State* state);
 
 } // namespace tetrl

@@ -13,7 +13,7 @@ Default feature -- ``default_feature()``
          reset bootstrap frames may be board-only)
  4       Board top mask
  5       Board holes mask
- 6       Current block on empty board
+ 6       Current piece on empty board
  7 - 10  Current orientation (one-hot 0/1/2/3)
 11 - 17  Current piece type (one-hot Z/L/O/S/I/J/T)
 18 - 24  Hold type (one-hot; all-zero when empty)
@@ -109,10 +109,10 @@ inline void make_board_features(State* s, float* top, float* holes) {
         }
 }
 
-inline void make_current_block(State* s, float* block_ch, float* rot_ch) {
+inline void make_current_piece(State* s, float* piece_ch, float* rot_ch) {
     Board tmp = {};
-    placeBlock(tmp, getBlock(s->current, s->orientation), s->x, s->y);
-    board_to_channel(tmp, block_ch);
+    placePiece(tmp, getPiece(s->current, s->orientation), s->x, s->y);
+    board_to_channel(tmp, piece_ch);
 
     for (int i = 0; i < N_ROTS; ++i) {
         float* ch = rot_ch + i * CH;
@@ -121,10 +121,10 @@ inline void make_current_block(State* s, float* block_ch, float* rot_ch) {
     }
 }
 
-inline void block_type_one_hot(float* ch, BlockType type) {
+inline void piece_type_one_hot(float* ch, PieceType type) {
     for (int i = 0; i < N_TYPES; ++i) {
         float* dst = ch + i * CH;
-        if (type != BlockType::NONE && i == static_cast<int>(type))
+        if (type != PieceType::NONE && i == static_cast<int>(type))
             fill_ones(dst);
         else
             fill_zeros(dst);
@@ -136,7 +136,7 @@ inline void make_shadow(State* s, float* ch) {
     std::memcpy(&tmp, s, sizeof(State));
     while (softDrop(&tmp)) {}
     std::memset(tmp.board.data, 0, sizeof(tmp.board.data));
-    placeCurrentBlock(&tmp);
+    placeCurrentPiece(&tmp);
     board_to_channel(tmp.board, ch);
 }
 
@@ -167,20 +167,20 @@ inline void compute(Context* env_ctx, FeatureContext* feature_ctx, float* out) {
     make_board_features(s, p, p + CH);
     p += 2 * CH;
 
-    make_current_block(s, p, p + CH);
+    make_current_piece(s, p, p + CH);
     p += (1 + N_ROTS) * CH;
 
-    block_type_one_hot(p, s->current);
+    piece_type_one_hot(p, s->current);
     p += N_TYPES * CH;
 
-    block_type_one_hot(p, s->hold);
+    piece_type_one_hot(p, s->hold);
     p += N_TYPES * CH;
 
     if (s->has_held) fill_ones(p); else fill_zeros(p);
     p += CH;
 
     for (int i = 0; i < N_NEXT; ++i) {
-        block_type_one_hot(p, s->next[i]);
+        piece_type_one_hot(p, s->next[i]);
         p += N_TYPES * CH;
     }
 
@@ -219,11 +219,11 @@ API void feature_step(Context* env_ctx, Info*, void* plugin_ctx, float* out) {
     State* s = &env_ctx->state;
     auto* feature_ctx = static_cast<FeatureContext*>(plugin_ctx);
 
-    placeCurrentBlock(s);
+    placeCurrentPiece(s);
     for (int i = N_FRAMES - 2; i >= 0; --i)
         std::memcpy(feature_ctx->frames[i + 1], feature_ctx->frames[i], sizeof(float) * CH);
     board_to_channel(s->board, feature_ctx->frames[0]);
-    removeCurrentBlock(s);
+    removeCurrentPiece(s);
 
     compute(env_ctx, feature_ctx, out);
 }
@@ -303,13 +303,13 @@ static inline float lookup_clamped(const float* table, int height) {
     return table[height];
 }
 
-static int count_block_leading_empty_rows(BlockType type, std::uint8_t orientation) {
-    const Block& block = getBlock(type, orientation);
+static int count_piece_leading_empty_rows(PieceType type, std::uint8_t orientation) {
+    const Piece& piece = getPiece(type, orientation);
     int leading_empty_rows = 0;
     for (int row = 0; row < 4; ++row) {
         bool row_has_cell = false;
         for (int col = 0; col < 4; ++col) {
-            if (getCell(block, col, row) != Cell::EMPTY) {
+            if (getCell(piece, col, row) != Cell::EMPTY) {
                 row_has_cell = true;
                 break;
             }
@@ -386,7 +386,7 @@ API float reward_step(Context* env_ctx, Info* info, void* plugin_ctx) {
         return -20.0f;
     }
 
-    BlockType locking_piece_type = reward_ctx->previous_state.current;
+    PieceType locking_piece_type = reward_ctx->previous_state.current;
     std::uint8_t locking_piece_orientation = reward_ctx->previous_state.orientation;
     std::int8_t locking_piece_y = reward_ctx->previous_state.y;
 
@@ -399,7 +399,7 @@ API float reward_step(Context* env_ctx, Info* info, void* plugin_ctx) {
     }
 
     const int leading_empty_rows =
-        count_block_leading_empty_rows(locking_piece_type, locking_piece_orientation);
+        count_piece_leading_empty_rows(locking_piece_type, locking_piece_orientation);
     const int lock_height = compute_lock_height(locking_piece_y, leading_empty_rows);
 
     float reward = 1.0f;
